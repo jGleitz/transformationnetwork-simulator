@@ -3,31 +3,35 @@ plugins {
     idea
 }
 
-group = "de.joshuagleitze"
-version = "1.0-SNAPSHOT"
+allprojects {
+    group = "de.joshuagleitze"
+    version = "1.0-SNAPSHOT"
 
-repositories {
-    jcenter()
-    maven { setUrl("https://kotlin.bintray.com/kotlin-js-wrappers") }
-}
-
-kotlin {
-    target.browser()
-    sourceSets["main"].dependencies {
-        implementation(npm("react", "16.9.0"))
-        implementation(npm("react-dom", "16.9.0"))
-        implementation(npm("core-js", "3.3.2"))
+    repositories {
+        jcenter()
+        maven { setUrl("https://kotlin.bintray.com/kotlin-js-wrappers") }
     }
 }
 
-dependencies {
-    implementation(kotlin("stdlib-js"))
-    implementation(name = "kotlin-react-dom", version = "16.9.0-pre.85-kotlin-1.3.50", group = "org.jetbrains")
-}
+subprojects {
+    apply {
+        // must use `apply` in `subprojects`, `plugins` does not work
+        plugin("idea")
+        plugin("org.jetbrains.kotlin.js")
+    }
 
-idea {
-    module {
-        isDownloadJavadoc = true
-        isDownloadSources = true
+    dependencies {
+        implementation(kotlin("stdlib-js"))
+    }
+
+    kotlin {
+        target.browser()
+    }
+
+    idea {
+        module {
+            isDownloadJavadoc = true
+            isDownloadSources = true
+        }
     }
 }
