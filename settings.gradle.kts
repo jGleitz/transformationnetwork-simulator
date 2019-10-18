@@ -1,6 +1,6 @@
 rootProject.name = "transformationnetwork"
 
 include(":metamodelling")
-include(":example-models:persons")
+include(":models:persons")
 include(":simulator")
 

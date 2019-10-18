@@ -25,7 +25,12 @@ subprojects {
     }
 
     kotlin {
-        target.browser()
+        target {
+            browser()
+            compilations.all {
+                compileKotlinTask.kotlinOptions.moduleKind = "umd"
+            }
+        }
     }
 
     idea {

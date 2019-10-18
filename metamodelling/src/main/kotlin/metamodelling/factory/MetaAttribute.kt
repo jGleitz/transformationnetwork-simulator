@@ -1,6 +1,6 @@
-package model.factory
+package de.joshuagleitze.transformationnetwork.metamodelling.factory
 
-import de.joshuagleitze.transformationnetwork.model.MetaAttribute
+import de.joshuagleitze.transformationnetwork.metamodelling.MetaAttribute
 import kotlin.reflect.KClass
 
 inline fun <reified T : Any> metaAttribute(name: String): MetaAttribute<T> = MetaAttributeImpl(name, T::class)

@@ -1,6 +1,4 @@
-package model
-
-import de.joshuagleitze.transformationnetwork.model.MetaAttribute
+package de.joshuagleitze.transformationnetwork.metamodelling
 
 interface MetaAttributeMap {
     operator fun <T : Any> get(attribute: MetaAttribute<T>): T?

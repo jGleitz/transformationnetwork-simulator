@@ -1,9 +1,9 @@
-package model.factory
+package de.joshuagleitze.transformationnetwork.metamodelling.factory
 
-import de.joshuagleitze.transformationnetwork.model.MetaAttribute
-import de.joshuagleitze.transformationnetwork.model.Metaclass
-import de.joshuagleitze.transformationnetwork.model.ModelObject
-import model.MetaAttributeMap
+import de.joshuagleitze.transformationnetwork.metamodelling.MetaAttribute
+import de.joshuagleitze.transformationnetwork.metamodelling.MetaAttributeMap
+import de.joshuagleitze.transformationnetwork.metamodelling.Metaclass
+import de.joshuagleitze.transformationnetwork.metamodelling.ModelObject
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 

@@ -1,9 +1,13 @@
-package examplemodels.persons
+package de.joshuagleitze.transformationnetwork.models.persons.metamodel
 
-import model.factory.DefaultModelObject
+import de.joshuagleitze.transformationnetwork.metamodelling.factory.DefaultModelObject
 
 class Person : DefaultModelObject(PersonMetaclass) {
     var firstName by attributeAccess(PersonMetaclass.Attributes.firstName)
     var lastName by attributeAccess(PersonMetaclass.Attributes.lastName)
     var birthDate by attributeAccess(PersonMetaclass.Attributes.birthDate)
+
+    companion object {
+        fun with(block: Person.() -> Unit) = Person().apply(block)
+    }
 }

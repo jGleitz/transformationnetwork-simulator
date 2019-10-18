@@ -1,22 +1,20 @@
 package de.joshuagleitze.transformationnetwork
 
-import examplemodels.persons.Person
-import react.dom.div
+import de.joshuagleitze.transformationnetwork.models.persons.NicePersons
+import de.joshuagleitze.transformationnetwork.simulator.styles.globalStyleSheet
+import de.joshuagleitze.transformationnetwork.simulator.view.model.ModelView
 import react.dom.render
+import styled.StyledComponents
+import styled.injectGlobal
 import kotlin.browser.document
 import kotlin.browser.window
-import kotlin.js.Date
 
 fun main() {
     window.onload = {
         val root = document.getElementById("root") ?: throw IllegalStateException()
-        val martin = Person().apply {
-            firstName = "Martin"
-            lastName = "Mustermann"
-            birthDate = Date(1991, 4, 8)
-        }
+        StyledComponents.injectGlobal(globalStyleSheet.toString())
         render(root) {
-            div { +"Hi, my name is ${martin.firstName} ${martin.lastName}, I was born on ${martin.birthDate?.toDateString()}." }
+            ModelView(NicePersons)
         }
     }
 }

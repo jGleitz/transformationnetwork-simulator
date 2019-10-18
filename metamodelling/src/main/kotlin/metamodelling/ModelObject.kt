@@ -1,6 +1,4 @@
-package de.joshuagleitze.transformationnetwork.model
-
-import model.MetaAttributeMap
+package de.joshuagleitze.transformationnetwork.metamodelling
 
 interface ModelObject {
     val metaclass: Metaclass

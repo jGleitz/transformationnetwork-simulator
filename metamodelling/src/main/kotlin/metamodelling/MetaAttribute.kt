@@ -1,4 +1,4 @@
-package de.joshuagleitze.transformationnetwork.model
+package de.joshuagleitze.transformationnetwork.metamodelling
 
 import kotlin.reflect.KClass
 
