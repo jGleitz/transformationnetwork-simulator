@@ -1,5 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.js") version "1.3.50"
+    idea
 }
 
 group = "de.joshuagleitze"
@@ -13,4 +14,11 @@ dependencies {
     implementation(kotlin("stdlib-js"))
 }
 
-kotlin.target.browser { }
+kotlin.target.browser {}
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
