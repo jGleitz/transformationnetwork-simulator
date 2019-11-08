@@ -113,6 +113,7 @@ Temporary Items
 
 # Generated files
 .idea/**/contentModel.xml
+.idea/artifacts
 
 # Sensitive or high-churn files
 .idea/**/dataSources/

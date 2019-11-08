@@ -13,6 +13,8 @@ allprojects {
     }
 }
 
+val spekVersion: String by project
+
 subprojects {
     apply {
         // must use `apply` in `subprojects`, `plugins` does not work
@@ -22,13 +24,17 @@ subprojects {
 
     dependencies {
         implementation(kotlin("stdlib-js"))
+
+        testImplementation(name = "spek-dsl-jvm", version = spekVersion, group = "org.spekframework.spek2")
+        testRuntimeOnly(name = "spek-runner-junit5", version = spekVersion, group = "org.spekframework.spek2")
+        testRuntimeOnly(kotlin("reflect"))
     }
 
     kotlin {
         target {
             browser()
             compilations.all {
-                compileKotlinTask.kotlinOptions.moduleKind = "umd"
+                compileKotlinTask.kotlinOptions.moduleKind = "commonjs"
             }
         }
     }
