@@ -1,4 +1,4 @@
-package de.joshuagleitze.transformationnetwork.simulator
+package de.joshuagleitze.transformationnetwork.simulator.util.geometry
 
 import kotlin.math.sqrt
 
@@ -24,17 +24,19 @@ data class Coordinate(val x: Double, val y: Double) {
     operator fun div(divident: Double) = componentWise { it / divident }
 
     inline fun componentWise(operation: (Double) -> Double) = Coordinate(operation(x), operation(y))
-    fun distanceTo(other: Coordinate) = (this - other).componentWise { it * it }.let { (x, y) -> sqrt(x + y) }
+    fun distanceTo(other: Coordinate) = (this - other).let { (x, y) -> sqrt(x * x + y * y) }
     fun normalize() = this / this.distanceTo(Zero)
+    operator fun unaryMinus() = componentWise { -it }
 
     companion object {
         val Zero = Coordinate(0, 0)
+        fun fromPolar(theta: Angle, r: Double) = Coordinate(r * theta.cosine(), r * theta.sine())
     }
 }
 
-operator fun Byte.times(angle: Angle) = Angle(this * angle.radians)
-operator fun Short.times(angle: Angle) = Angle(this * angle.radians)
-operator fun Int.times(angle: Angle) = Angle(this * angle.radians)
-operator fun Long.times(angle: Angle) = Angle(this * angle.radians)
-operator fun Float.times(angle: Angle) = Angle(this * angle.radians)
-operator fun Double.times(angle: Angle) = Angle(this * angle.radians)
+operator fun Byte.times(coordinate: Coordinate) = coordinate * this
+operator fun Short.times(coordinate: Coordinate) = coordinate * this
+operator fun Int.times(coordinate: Coordinate) = coordinate * this
+operator fun Long.times(coordinate: Coordinate) = coordinate * this
+operator fun Float.times(coordinate: Coordinate) = coordinate * this
+operator fun Double.times(coordinate: Coordinate) = coordinate * this

@@ -4,7 +4,9 @@ import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 
-sealed class ModelChange(val targetModel: Model)
+sealed class ModelChange(val targetModel: Model) {
+    abstract fun revert()
+}
 
 sealed class ObjectChange(targetModel: Model) : ModelChange(targetModel)
 
@@ -13,7 +15,7 @@ sealed class AttributeChange(targetModel: Model, val targetObject: ModelObject) 
     abstract val targetAttribute: MetaAttribute<*>
 }
 
-class AdditionChange(targetModel: Model, val addedObject: ModelObject) : ObjectChange(targetModel), RevertibleChange {
+class AdditionChange(targetModel: Model, val addedObject: ModelObject) : ObjectChange(targetModel) {
     init {
         checkModelObjectMembership(addedObject)
     }
@@ -23,7 +25,7 @@ class AdditionChange(targetModel: Model, val addedObject: ModelObject) : ObjectC
     }
 }
 
-class DeletionChange(targetModel: Model, val deletedObject: ModelObject) : ObjectChange(targetModel), RevertibleChange {
+class DeletionChange(targetModel: Model, val deletedObject: ModelObject) : ObjectChange(targetModel) {
     init {
         checkModelObjectType(deletedObject)
     }
@@ -38,7 +40,7 @@ class AttributeSetChange<T : Any>(
     targetObject: ModelObject,
     override val targetAttribute: MetaAttribute<T>,
     val oldValue: T?
-) : AttributeChange(targetModel, targetObject), RevertibleChange {
+) : AttributeChange(targetModel, targetObject) {
     val newValue: T?
 
     init {

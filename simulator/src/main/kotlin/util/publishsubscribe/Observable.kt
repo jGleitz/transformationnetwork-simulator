@@ -1,4 +1,4 @@
-package de.joshuagleitze.transformationnetwork.simulator
+package de.joshuagleitze.transformationnetwork.simulator.util.publishsubscribe
 
 interface Observable<Data> {
     val current: Data

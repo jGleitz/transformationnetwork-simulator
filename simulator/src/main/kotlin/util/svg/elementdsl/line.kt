@@ -1,7 +1,7 @@
-package de.joshuagleitze.transformationnetwork.simulator.svgdsl
+package de.joshuagleitze.transformationnetwork.simulator.util.svg.elementdsl
 
-import de.joshuagleitze.transformationnetwork.simulator.Coordinate
-import de.joshuagleitze.transformationnetwork.simulator.Line
+import de.joshuagleitze.transformationnetwork.simulator.util.geometry.Coordinate
+import de.joshuagleitze.transformationnetwork.simulator.util.geometry.Line
 import kotlinx.html.HTMLTag
 import kotlinx.html.TagConsumer
 import kotlinx.html.attributesMapOf

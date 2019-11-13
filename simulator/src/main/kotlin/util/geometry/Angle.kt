@@ -1,4 +1,4 @@
-package de.joshuagleitze.transformationnetwork.simulator
+package de.joshuagleitze.transformationnetwork.simulator.util.geometry
 
 import kotlin.math.acos
 import kotlin.math.asin
@@ -9,18 +9,15 @@ import kotlin.math.sin
 import kotlin.math.tan
 
 
-inline class Angle constructor(val radians: Double) : Comparable<Angle> {
+class Angle constructor(val radians: Double) : Comparable<Angle> {
+    constructor(radians: Number) : this(radians.toDouble())
+
     val degrees get() = radians * DEGREES_IN_RADIAN
 
     fun sine() = sin(radians)
-
-    fun arcsine() = asin(radians)
-
     fun cosine() = cos(radians)
-    fun arccosine() = acos(radians)
     fun tangent() = tan(radians)
-    fun arctangent() = atan(radians)
-    operator fun rangeTo(endInclusive: Angle) = AngleRange(this, endInclusive)
+
     operator fun unaryMinus() = Angle(-radians)
 
     override fun compareTo(other: Angle) = (radians.normalize() - other.radians.normalize()).let { difference ->
@@ -49,17 +46,40 @@ inline class Angle constructor(val radians: Double) : Comparable<Angle> {
     operator fun minus(angle: Angle) = Angle(radians - angle.radians)
 
     companion object {
-        fun between(a: Coordinate, b: Coordinate) = Angle(atan2(a.y - b.y, a.x - b.x))
+        fun between(a: Coordinate, b: Coordinate) = Angle(atan2(-b.y + a.y, b.x - a.x))
         val PI = Angle(kotlin.math.PI)
+
+        fun arcsine(x: Double) = Angle(asin(x))
+        fun arccosine(x: Double) = Angle(acos(x))
+        fun arctangent(x: Double) = Angle(atan(x))
 
         private const val MAX_RADIAN = 2 * kotlin.math.PI
         private const val DEGREES_IN_RADIAN = 180.0 / kotlin.math.PI
     }
 
-    class AngleRange(
-        override val start: Angle,
-        override val endInclusive: Angle
-    ) : ClosedRange<Angle>
-
     private fun Double.fMod(other: Double) = ((this % other) + other) % other
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class.js != other::class.js) return false
+        other as Angle
+
+        return radians.normalize() == other.radians.normalize()
+    }
+
+    override fun hashCode(): Int {
+        return radians.normalize().hashCode()
+    }
+
+    override fun toString(): String {
+        val pis = radians / kotlin.math.PI
+        return "Angle(radians=$pis*π)"
+    }
 }
+
+operator fun Byte.times(angle: Angle) = angle * this
+operator fun Short.times(angle: Angle) = angle * this
+operator fun Int.times(angle: Angle) = angle * this
+operator fun Long.times(angle: Angle) = angle * this
+operator fun Float.times(angle: Angle) = angle * this
+operator fun Double.times(angle: Angle) = angle * this

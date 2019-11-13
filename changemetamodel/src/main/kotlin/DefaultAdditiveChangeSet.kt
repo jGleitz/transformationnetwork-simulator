@@ -1,19 +1,20 @@
 package de.joshuagleitze.transformationnetwork.changemetamodel
 
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
-import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 
-class DefaultAdditiveChangeSet(override val targetModel: Model) : AdditiveChangeSet {
-    private val _additions = HashMap<ModelObject, AdditionChange>()
-    override val additions: Collection<AdditionChange> get() = _additions.values
-    private val _deletions = HashMap<ModelObject, DeletionChange>()
-    override val deletions: Collection<DeletionChange> get() = _deletions.values
-    private val _modifications = HashMap<ModelObject, HashMap<MetaAttribute<*>, AttributeChange>>()
-    override val modifications: Collection<AttributeChange> get() = _modifications.values.flatMap { it.values }
+class DefaultAdditiveChangeSet private constructor(
+    private val _additions: MutableMap<ModelObject, AdditionChange>,
+    private val _deletions: MutableMap<ModelObject, DeletionChange>,
+    private val _modifications: MutableMap<ModelObject, MutableMap<MetaAttribute<*>, AttributeChange>>
+) : AdditiveChangeSet {
+    constructor() : this(HashMap(), HashMap(), HashMap())
 
+    override val additions: Collection<AdditionChange> get() = _additions.values
+
+    override val deletions: Collection<DeletionChange> get() = _deletions.values
+    override val modifications: Collection<AttributeChange> get() = _modifications.values.flatMap { it.values }
     override fun add(change: ModelChange): Boolean {
-        check(change.targetModel == targetModel) { "The change '$change' does not target this change set’s target model '$targetModel', but '${change.targetModel}'!" }
         return when (change) {
             is AdditionChange -> addAdditionChange(change)
             is DeletionChange -> addDeletionChange(change)
@@ -46,6 +47,16 @@ class DefaultAdditiveChangeSet(override val targetModel: Model) : AdditiveChange
     override fun addAll(changes: Collection<ModelChange>) =
         changes.fold(false) { lastResult, change -> add(change) || lastResult }
 
+    override fun addAll(changes: ChangeSet): Boolean {
+        val additionResult =
+            changes.additions.fold(false) { lastResult, change -> addAdditionChange(change) || lastResult }
+        val deletionResult =
+            changes.deletions.fold(false) { lastResult, change -> addDeletionChange(change) || lastResult }
+        val modificationResult =
+            changes.modifications.fold(false) { lastResult, change -> addAttributeChange(change) || lastResult }
+        return additionResult || deletionResult || modificationResult
+    }
+
     override val size: Int get() = additions.size + deletions.size + modifications.size
 
     override fun contains(element: ModelChange) = when (element) {
@@ -57,6 +68,9 @@ class DefaultAdditiveChangeSet(override val targetModel: Model) : AdditiveChange
     override fun containsAll(elements: Collection<ModelChange>) = elements.all { contains(it) }
 
     override fun isEmpty() = additions.isEmpty() && deletions.isEmpty() && modifications.isEmpty()
+
+    override fun copy() =
+        DefaultAdditiveChangeSet(HashMap(this._additions), HashMap(this._deletions), HashMap(this._modifications))
 
     override fun iterator(): Iterator<ModelChange> {
         val addedIterator = additions.iterator()
@@ -72,4 +86,14 @@ class DefaultAdditiveChangeSet(override val targetModel: Model) : AdditiveChange
             }.next()
         }
     }
+}
+
+fun ChangeSet.asAdditive() = when (this) {
+    is AdditiveChangeSet -> this
+    else -> DefaultAdditiveChangeSet().also { it += this }
+}
+
+fun ChangeSet.additiveCopy() = when (this) {
+    is AdditiveChangeSet -> this.copy()
+    else -> DefaultAdditiveChangeSet().also { it += this }
 }

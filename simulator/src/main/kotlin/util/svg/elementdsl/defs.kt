@@ -1,4 +1,4 @@
-package de.joshuagleitze.transformationnetwork.simulator.svgdsl
+package de.joshuagleitze.transformationnetwork.simulator.util.svg.elementdsl
 
 import kotlinx.html.HTMLTag
 import kotlinx.html.TagConsumer

@@ -12,8 +12,12 @@ abstract class DefaultModelTransformation<in Tag : Any> : ModelTransformation {
     protected abstract fun processChangesChecked(leftSide: TransformationSide, rightSide: TransformationSide)
 
     final override fun processChanges(leftChanges: ChangeSet, rightChanges: ChangeSet) {
-        check(leftChanges.targetModel == leftModel) { "The left change set not target this transformation’s left model '$leftModel'!" }
-        check(rightChanges.targetModel == rightModel) { "The right change set does not target this transformation’s right model '$rightModel'!" }
+        leftChanges.forEach { change ->
+            check(change.targetModel == leftModel) { "The left change '$change' does not target this transformation’s left model '$leftModel'!" }
+        }
+        rightChanges.forEach { change ->
+            check(change.targetModel == leftModel) { "The right change '$change' does not target this transformation’s right model '$rightModel'!" }
+        }
         processChangesChecked(TransformationSide(LEFT, leftChanges), TransformationSide(RIGHT, rightChanges))
     }
 

@@ -1,0 +1,5 @@
+package de.joshuagleitze.transformationnetwork.changeablemodel
+
+import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
+
+interface ChangeRecordingModelObject : ModelObject, ChangeRecording

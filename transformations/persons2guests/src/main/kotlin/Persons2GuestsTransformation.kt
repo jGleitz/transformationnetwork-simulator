@@ -5,11 +5,11 @@ import de.joshuagleitze.transformationnetwork.models.guestlist.Guest
 import de.joshuagleitze.transformationnetwork.models.guestlist.GuestMetaclass.Attributes.age
 import de.joshuagleitze.transformationnetwork.models.guestlist.GuestMetaclass.Attributes.name
 import de.joshuagleitze.transformationnetwork.models.guestlist.GuestlistMetamodel
-import de.joshuagleitze.transformationnetwork.models.persons.metamodel.Person
-import de.joshuagleitze.transformationnetwork.models.persons.metamodel.PersonMetaclass.Attributes.birthDate
-import de.joshuagleitze.transformationnetwork.models.persons.metamodel.PersonMetaclass.Attributes.firstName
-import de.joshuagleitze.transformationnetwork.models.persons.metamodel.PersonMetaclass.Attributes.lastName
-import de.joshuagleitze.transformationnetwork.models.persons.metamodel.PersonsMetamodel
+import de.joshuagleitze.transformationnetwork.models.persons.Person
+import de.joshuagleitze.transformationnetwork.models.persons.PersonMetaclass.Attributes.birthDate
+import de.joshuagleitze.transformationnetwork.models.persons.PersonMetaclass.Attributes.firstName
+import de.joshuagleitze.transformationnetwork.models.persons.PersonMetaclass.Attributes.lastName
+import de.joshuagleitze.transformationnetwork.models.persons.PersonsMetamodel
 import de.joshuagleitze.transformationnetwork.modeltransformation.DefaultModelTransformation
 import de.joshuagleitze.transformationnetwork.modeltransformation.DefaultModelTransformationType
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.LEFT
@@ -49,12 +49,12 @@ class Persons2GuestsTransformation(val personsModel: Model, val guestlistModel: 
         }
     }
 
-    private fun TransformationSide.createOtherSidePersonLike(personLike: ModelObject) = when (side) {
-        LEFT -> Guest.with {
+    private fun TransformationSide.createOtherSidePersonLike(personLike: ModelObject): ModelObject = when (side) {
+        LEFT -> Guest().apply {
             name = nameFromFirstNameAndLastName(personLike)
             age = ageFromBirthDate(personLike)
         }
-        RIGHT -> Person.with {
+        RIGHT -> Person().apply {
             firstName = firstNameFromName(personLike)
             lastName = lastNameFromName(personLike)
             birthDate = birthDateFromAge(personLike)

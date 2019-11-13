@@ -1,3 +1,3 @@
 dependencies {
-    implementation(project(":metametamodel"))
+    implementation(project(":changeablemodel"))
 }

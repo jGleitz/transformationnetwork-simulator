@@ -1,8 +1,8 @@
 package de.joshuagleitze.transformationnetwork.models.guestlist
 
+import de.joshuagleitze.transformationnetwork.changeablemodel.factory.metaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
 import de.joshuagleitze.transformationnetwork.metametamodel.Metamodel
-import de.joshuagleitze.transformationnetwork.metametamodel.factory.metaAttribute
 
 object GuestlistMetamodel : Metamodel {
     override val name: String get() = "Guest List"
