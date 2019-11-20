@@ -2,10 +2,18 @@ package de.joshuagleitze.transformationnetwork.simulator.styles
 
 import kotlinx.css.Color
 import kotlinx.css.Color.Companion.black
+import kotlinx.css.Color.Companion.white
+import kotlinx.css.hsl
+import kotlinx.css.rgba
 
 object Colors {
-    val borderColor = black
-    val backgroundGray = Color("#E0E0E0")
+    val border = black
+    val background = white
+    val alternativeBackground = rgba(0, 0, 0, .14)
     val lessImportant = Color("#666666")
-    val transformationColor = Color("#888888")
+    val transformation = Color("#888888")
+    val controlBorder = hsl(0, 0, 80)
+    val controlHoverBorder = hsl(0, 0, 70)
+    val controlBackground = hsl(0, 0, 100)
+    val updated = Color("#FFEBCC")
 }

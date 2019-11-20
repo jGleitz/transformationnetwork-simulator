@@ -6,7 +6,7 @@ import de.joshuagleitze.transformationnetwork.simulator.components.arrow.ArrowTa
 import de.joshuagleitze.transformationnetwork.simulator.components.svg.AppendDef
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.ArrowTargetData
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.lineBetween
-import de.joshuagleitze.transformationnetwork.simulator.styles.Colors.transformationColor
+import de.joshuagleitze.transformationnetwork.simulator.styles.Colors
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacingPx
 import de.joshuagleitze.transformationnetwork.simulator.styles.FontSize
 import de.joshuagleitze.transformationnetwork.simulator.util.svg.elementdsl.marker
@@ -16,6 +16,7 @@ import de.joshuagleitze.transformationnetwork.simulator.util.svg.elementdsl.use
 import kotlinext.js.jsObject
 import react.RBuilder
 import react.RComponent
+import react.RHandler
 import react.RProps
 import react.RState
 import react.setState
@@ -28,14 +29,14 @@ private val arrowEndDistance = 2 * baseSpacingPx
 
 private object TransformationStyles : StyleSheet("Transformation") {
     val transformation by css {
-        put("stroke", transformationColor.value)
+        put("stroke", Colors.transformation.value)
         put("stroke-width", "$strokeWidth")
         put("fill", "none")
         put("marker-start", "url(#transformationArrowHeadStart)")
         put("marker-end", "url(#transformationArrowHeadEnd)")
     }
     val transformationArrowTip by css {
-        put("fill", transformationColor.value)
+        put("fill", Colors.transformation.value)
     }
 }
 
@@ -51,6 +52,9 @@ private interface TransformationViewState : RState {
 }
 
 private class TransformationView : RComponent<TransformationViewProps, TransformationViewState>() {
+    lateinit var leftModelTarget: ArrowTarget
+    lateinit var rightModelTarget: ArrowTarget
+
     init {
         state = jsObject {
             leftModelTarget = null
@@ -96,23 +100,20 @@ private class TransformationView : RComponent<TransformationViewProps, Transform
     }
 
     override fun componentDidMount() {
-        val leftModelTarget = props.modelArrowTargetProvider(props.transformation.leftModel)
+        leftModelTarget = props.modelArrowTargetProvider(props.transformation.leftModel)
         leftModelTarget.data.subscribe(this.setLeftModelArrowTargetData)
 
-        val rightModelTarget = props.modelArrowTargetProvider(props.transformation.rightModel)
+        rightModelTarget = props.modelArrowTargetProvider(props.transformation.rightModel)
         rightModelTarget.data.subscribe(this.setRightModelArrowTargetData)
 
         setState {
-            this.leftModelTarget = leftModelTarget.data.current
-            this.rightModelTarget = rightModelTarget.data.current
+            this.leftModelTarget = this@TransformationView.leftModelTarget.data.last
+            this.rightModelTarget = this@TransformationView.rightModelTarget.data.last
         }
     }
 
     override fun componentWillUnmount() {
-        val leftModelTarget = props.modelArrowTargetProvider(props.transformation.leftModel)
         leftModelTarget.data.unsubscribe(this.setLeftModelArrowTargetData)
-
-        val rightModelTarget = props.modelArrowTargetProvider(props.transformation.rightModel)
         rightModelTarget.data.unsubscribe(this.setRightModelArrowTargetData)
     }
 
@@ -136,9 +137,11 @@ private class TransformationView : RComponent<TransformationViewProps, Transform
 fun RBuilder.TransformationView(
     transformation: ModelTransformation,
     coordinateSystem: SvgCoordinateSystem,
-    modelArrowTargetProvider: (Model) -> ArrowTarget
+    modelArrowTargetProvider: (Model) -> ArrowTarget,
+    handler: RHandler<TransformationViewProps> = {}
 ) = child(TransformationView::class) {
     attrs.transformation = transformation
     attrs.coordinateSystem = coordinateSystem
     attrs.modelArrowTargetProvider = modelArrowTargetProvider
+    handler()
 }

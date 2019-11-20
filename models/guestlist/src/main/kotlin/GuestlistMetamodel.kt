@@ -1,10 +1,10 @@
 package de.joshuagleitze.transformationnetwork.models.guestlist
 
-import de.joshuagleitze.transformationnetwork.changeablemodel.factory.metaAttribute
+import de.joshuagleitze.transformationnetwork.changerecording.factory.metaAttribute
+import de.joshuagleitze.transformationnetwork.metametamodel.AbstractMetamodel
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
-import de.joshuagleitze.transformationnetwork.metametamodel.Metamodel
 
-object GuestlistMetamodel : Metamodel {
+object GuestlistMetamodel : AbstractMetamodel() {
     override val name: String get() = "Guest List"
 
     override val classes get() = setOf(GuestMetaclass)

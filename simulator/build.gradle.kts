@@ -2,16 +2,14 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 dependencies {
     implementation(name = "kotlin-react-dom", version = "16.9.0-pre.87-kotlin-1.3.50", group = "org.jetbrains")
-    implementation(name = "kotlin-styled", version = "1.0.0-pre.85-kotlin-1.3.50", group = "org.jetbrains")
-    implementation(project(":changeablemodel"))
-    implementation(project(":modeltransformation"))
+    implementation(name = "kotlin-styled", version = "1.0.0-pre.87-kotlin-1.3.50", group = "org.jetbrains")
+
+    implementation(project(":publishsubscribe"))
+    implementation(project(":changerecording"))
+    implementation(project(":network"))
     implementation(project(":models:persons"))
     implementation(project(":models:guestlist"))
     implementation(project(":transformations:persons2guests"))
-
-    testImplementation(kotlin("test-js"))
-    testImplementation(name = "atrium-fluent-en_GB-js", version = "0.9.0-alpha", group = "ch.tutteli.atrium")
-    testImplementation(name = "atrium-domain-api-js", version = "0.9.0-alpha", group = "ch.tutteli.atrium")
 }
 
 kotlin {
@@ -22,9 +20,11 @@ kotlin {
         implementation(npm("styled-components", "4.4.0"))
         implementation(npm("inline-style-prefixer", "5.1.0"))
         implementation(npm("react-select", "3.0.8"))
+        implementation(npm("use-force-update", "1.0.7"))
     }
 }
 
 project.tasks.withType<KotlinWebpack> {
     devServer = devServer?.copy(open = false)
+    outputFileName = "bundle.js"
 }

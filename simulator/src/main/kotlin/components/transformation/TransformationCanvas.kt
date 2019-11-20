@@ -22,6 +22,7 @@ import react.RProps
 import react.RReadableRef
 import react.RState
 import react.createRef
+import react.key
 import react.setState
 import styled.StyleSheet
 import styled.css
@@ -40,7 +41,7 @@ private object TransformationCanvasStyles : StyleSheet("TransformationCanvas") {
 
 interface TransformationCanvasProps : RProps {
     var modelArrowTargetProvider: (Model) -> ArrowTarget
-    var transformations: List<ModelTransformation>
+    var transformations: Set<ModelTransformation>
 }
 
 private interface TransformationState : RState {
@@ -77,7 +78,9 @@ private class TransformationCanvas : RComponent<TransformationCanvasProps, Trans
     */
 
                 props.transformations.forEach { transformation ->
-                    TransformationView(transformation, state.coordinateSystem, props.modelArrowTargetProvider)
+                    TransformationView(transformation, state.coordinateSystem, props.modelArrowTargetProvider) {
+                        attrs.key = transformation.hashCode().toString()
+                    }
                 }
             }
         }
@@ -86,7 +89,7 @@ private class TransformationCanvas : RComponent<TransformationCanvasProps, Trans
 
 fun RBuilder.TransformationCanvas(
     modelArrowTargetProvider: (Model) -> ArrowTarget,
-    transformations: List<ModelTransformation>
+    transformations: Set<ModelTransformation>
 ) = child(TransformationCanvas::class) {
     attrs.modelArrowTargetProvider = modelArrowTargetProvider
     attrs.transformations = transformations

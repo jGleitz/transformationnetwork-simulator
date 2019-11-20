@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version "1.3.50"
+    kotlin("js") version "1.3.60"
     idea
 }
 
@@ -25,9 +25,7 @@ subprojects {
     dependencies {
         implementation(kotlin("stdlib-js"))
 
-        testImplementation(name = "spek-dsl-jvm", version = spekVersion, group = "org.spekframework.spek2")
-        testRuntimeOnly(name = "spek-runner-junit5", version = spekVersion, group = "org.spekframework.spek2")
-        testRuntimeOnly(kotlin("reflect"))
+        testImplementation(kotlin("test-js"))
     }
 
     kotlin {

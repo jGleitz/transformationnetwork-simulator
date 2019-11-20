@@ -1,8 +1,8 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.model
 
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
+import de.joshuagleitze.transformationnetwork.simulator.components.simulator.time
 import de.joshuagleitze.transformationnetwork.simulator.styles.Colors
-import de.joshuagleitze.transformationnetwork.simulator.styles.Colors.backgroundGray
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import kotlinx.css.BorderCollapse.collapse
 import kotlinx.css.BorderStyle.solid
@@ -15,7 +15,9 @@ import kotlinx.css.borderTopStyle
 import kotlinx.css.borderTopWidth
 import kotlinx.css.fontStyle
 import kotlinx.css.marginTop
+import kotlinx.css.minWidth
 import kotlinx.css.padding
+import kotlinx.css.pct
 import kotlinx.css.px
 import kotlinx.css.textAlign
 import react.RBuilder
@@ -34,13 +36,17 @@ private object ModelObjectStyles : StyleSheet("ModelObject") {
         borderCollapse = collapse
         borderTopWidth = 1.px
         borderTopStyle = solid
-        borderTopColor = Colors.borderColor
+        borderTopColor = Colors.border
         marginTop = baseSpacing
+        minWidth = 100.pct
     }
     val attributeRow by css {
         nthChild("even") {
-            backgroundColor = backgroundGray
+            backgroundColor = Colors.alternativeBackground
         }
+    }
+    val updated by css {
+        backgroundColor = Colors.updated
     }
     private val trTopBottomSpacing = baseSpacing * 0.5
     private val trInnerSpacing = baseSpacing * 0.5
@@ -81,21 +87,27 @@ private fun RBuilder.styledValue(value: Any?) {
     }
 }
 
-fun RBuilder.ModelObjectView(modelObject: ModelObject) {
-    styledTable {
-        css { +ModelObjectStyles.attributesTable }
-        tbody {
-            modelObject.metaclass.attributes.forEach { attribute ->
-                styledTr {
-                    css { +ModelObjectStyles.attributeRow }
-                    styledTd {
-                        css { +ModelObjectStyles.attributeName }
-                        +attribute.name
-                        +":"
-                    }
-                    styledTd {
-                        css { +ModelObjectStyles.attributeValue }
-                        styledValue(modelObject[attribute])
+fun RBuilder.ModelObjectView(modelObject: ModelObject, addedTime: Int?) {
+    time.Consumer { currentTime ->
+        styledTable {
+            css {
+                +ModelObjectStyles.attributesTable
+                if (currentTime == addedTime) +ModelObjectStyles.updated
+            }
+
+            tbody {
+                modelObject.metaclass.attributes.forEach { attribute ->
+                    styledTr {
+                        css { +ModelObjectStyles.attributeRow }
+                        styledTd {
+                            css { +ModelObjectStyles.attributeName }
+                            +attribute.name
+                            +":"
+                        }
+                        styledTd {
+                            css { +ModelObjectStyles.attributeValue }
+                            styledValue(modelObject[attribute])
+                        }
                     }
                 }
             }

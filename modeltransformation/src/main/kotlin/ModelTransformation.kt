@@ -1,12 +1,13 @@
 package de.joshuagleitze.transformationnetwork.modeltransformation
 
-import de.joshuagleitze.transformationnetwork.changemetamodel.ChangeSet
+import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 
 interface ModelTransformation {
     val leftModel: Model
     val rightModel: Model
     val models: TransformationModels
+    val type: ModelTransformationType
 
     fun processChanges(leftChanges: ChangeSet, rightChanges: ChangeSet)
 

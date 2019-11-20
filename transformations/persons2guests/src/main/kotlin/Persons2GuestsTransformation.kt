@@ -1,4 +1,4 @@
-import de.joshuagleitze.transformationnetwork.changemetamodel.ChangeSet
+import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.models.guestlist.Guest
@@ -22,6 +22,7 @@ class Persons2GuestsTransformation(val personsModel: Model, val guestlistModel: 
     DefaultModelTransformation<Nothing>() {
     override val leftModel: Model get() = personsModel
     override val rightModel: Model get() = guestlistModel
+    override val type get() = Companion
 
     override fun processChangesChecked(leftSide: TransformationSide, rightSide: TransformationSide) {
         leftSide.processDeletions()
@@ -80,10 +81,19 @@ class Persons2GuestsTransformation(val personsModel: Model, val guestlistModel: 
             checkNotNull(correspondingPerson) { "Cannot find the corresponding person for '$guest'!" }
             when (modification.targetAttribute) {
                 name -> {
-                    correspondingPerson[firstName] = firstNameFromName(guest)
-                    correspondingPerson[lastName] = lastNameFromName(guest)
+                    correspondingPerson.changeIfNot(
+                        firstName,
+                        guest[name] isEqualTo ::nameFromFirstNameAndLastName
+                    ) { firstNameFromName(guest) }
+                    correspondingPerson.changeIfNot(
+                        lastName,
+                        guest[name] isEqualTo ::nameFromFirstNameAndLastName
+                    ) { lastNameFromName(guest) }
                 }
-                age -> correspondingPerson[birthDate] = birthDateFromAge(guest)
+                age -> correspondingPerson.changeIfNot(
+                    birthDate,
+                    guest[age] isEqualTo ::ageFromBirthDate
+                ) { birthDateFromAge(guest) }
             }
         }
     }
@@ -106,7 +116,7 @@ class Persons2GuestsTransformation(val personsModel: Model, val guestlistModel: 
     }
 
     private fun birthDateFromAge(guest: ModelObject) = guest[age]?.let { age ->
-        Date((Date.now().toLong() / MILLIS_IN_YEAR - age).toInt(), 0, 0, 0, 0, 0, 0)
+        Date(year = Date().getFullYear() - age, month = 0)
     }
 
     private fun String?.nullIfEmpty() = if (this == "") null else this

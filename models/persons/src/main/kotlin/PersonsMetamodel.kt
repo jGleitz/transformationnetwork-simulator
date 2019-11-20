@@ -1,11 +1,11 @@
 package de.joshuagleitze.transformationnetwork.models.persons
 
-import de.joshuagleitze.transformationnetwork.changeablemodel.factory.metaAttribute
+import de.joshuagleitze.transformationnetwork.changerecording.factory.metaAttribute
+import de.joshuagleitze.transformationnetwork.metametamodel.AbstractMetamodel
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
-import de.joshuagleitze.transformationnetwork.metametamodel.Metamodel
 import kotlin.js.Date
 
-object PersonsMetamodel : Metamodel {
+object PersonsMetamodel : AbstractMetamodel() {
     override val name: String get() = "Persons"
 
     override val classes get() = setOf(PersonMetaclass)

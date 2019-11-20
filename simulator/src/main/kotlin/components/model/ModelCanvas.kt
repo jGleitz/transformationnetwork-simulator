@@ -1,8 +1,8 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.model
 
-import de.joshuagleitze.transformationnetwork.changeablemodel.ChangeRecordingModel
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.simulator.components.arrow.ArrowTarget
+import de.joshuagleitze.transformationnetwork.simulator.data.scenario.PositionedModel
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import kotlinx.css.Align.center
 import kotlinx.css.BoxSizing.borderBox
@@ -31,29 +31,10 @@ import react.RComponent
 import react.RHandler
 import react.RProps
 import react.RState
+import react.key
 import styled.StyleSheet
 import styled.css
 import styled.styledDiv
-
-interface PositionedModel : ChangeRecordingModel {
-    val model: Model
-    val position: ModelPosition
-}
-
-private class DefaultPositionedModel(override val model: ChangeRecordingModel, override val position: ModelPosition) :
-    PositionedModel,
-    ChangeRecordingModel by model
-
-interface ModelPosition {
-    val column: Int
-    val row: Int
-}
-
-private class DefaultModelPosition(override val column: Int, override val row: Int) : ModelPosition
-
-infix fun ChangeRecordingModel.at(position: ModelPosition): PositionedModel = DefaultPositionedModel(this, position)
-
-infix fun Int.x(y: Int): ModelPosition = DefaultModelPosition(this, y)
 
 private object ModelCanvasStyles : StyleSheet("ModelCanvas") {
     val modelCanvas by css {
@@ -87,7 +68,14 @@ class ModelCanvas : RComponent<ModelCanvasProps, RState>() {
 
             props.models.forEach { model ->
                 ModelView(model) {
-                    ref { if (it is ArrowTarget) modelArrowTargets[model.model] = it }
+                    attrs.key = model.hashCode().toString()
+                    ref { modelView: Any? ->
+                        when (modelView) {
+                            null -> modelArrowTargets.remove(model.model)
+                            is ArrowTarget -> modelArrowTargets[model.model] = modelView
+                            else -> throw IllegalStateException("$modelView is not an ArrowTarget!")
+                        }
+                    }
                 }
             }
         }

@@ -1,10 +1,11 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.arrow
 
+import de.joshuagleitze.transformationnetwork.publishsubscribe.Observable
+import de.joshuagleitze.transformationnetwork.publishsubscribe.PublishingObservable
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.ArrowTargetData
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.DefaultArrowTargetData
+import de.joshuagleitze.transformationnetwork.simulator.util.externals.ResizeObserver
 import de.joshuagleitze.transformationnetwork.simulator.util.geometry.Coordinate
-import de.joshuagleitze.transformationnetwork.simulator.util.publishsubscribe.Observable
-import de.joshuagleitze.transformationnetwork.simulator.util.publishsubscribe.PublishingObservable
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.events.Event
 import react.RBuilder
@@ -20,12 +21,13 @@ interface ArrowTargetProps : RProps {
 }
 
 interface ArrowTarget {
-    val data: Observable<ArrowTargetData?>
+    val data: Observable<ArrowTargetData>
 }
 
 private class ArrowTargetComponent private constructor() : RComponent<ArrowTargetProps, RState>(), ArrowTarget {
-    override var data = PublishingObservable<ArrowTargetData?>(null)
+    override var data = PublishingObservable<ArrowTargetData>(null)
     private lateinit var targetContainer: HTMLElement
+    private lateinit var resizeObserver: ResizeObserver
 
     override fun RBuilder.render() {
         props.children()
@@ -41,12 +43,15 @@ private class ArrowTargetComponent private constructor() : RComponent<ArrowTarge
 
     override fun componentDidMount() {
         targetContainer = props.targetRef.current!!
+        resizeObserver = ResizeObserver { _, _ -> publishData() }
+        resizeObserver.observe(targetContainer)
         publishData()
         window.addEventListener("resize", this::publishData)
     }
 
     override fun componentWillUnmount() {
         window.removeEventListener("resize", this::publishData)
+        resizeObserver.disconnect()
     }
 }
 

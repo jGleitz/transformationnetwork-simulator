@@ -1,6 +1,7 @@
 package de.joshuagleitze.transformationnetwork.modeltransformation
 
-import de.joshuagleitze.transformationnetwork.changemetamodel.ChangeSet
+import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
+import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.LEFT
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.RIGHT
@@ -13,10 +14,10 @@ abstract class DefaultModelTransformation<in Tag : Any> : ModelTransformation {
 
     final override fun processChanges(leftChanges: ChangeSet, rightChanges: ChangeSet) {
         leftChanges.forEach { change ->
-            check(change.targetModel == leftModel) { "The left change '$change' does not target this transformation’s left model '$leftModel'!" }
+            check(change.targetModel.identifies(leftModel)) { "The left change '$change' does not target this transformation’s left model '$leftModel'!" }
         }
         rightChanges.forEach { change ->
-            check(change.targetModel == leftModel) { "The right change '$change' does not target this transformation’s right model '$rightModel'!" }
+            check(change.targetModel.identifies(rightModel)) { "The right change '$change' does not target this transformation’s right model '$rightModel'!" }
         }
         processChangesChecked(TransformationSide(LEFT, leftChanges), TransformationSide(RIGHT, rightChanges))
     }
@@ -30,6 +31,8 @@ abstract class DefaultModelTransformation<in Tag : Any> : ModelTransformation {
 
     protected fun checkIsFromModel(side: ModelTransformation.Side, modelObject: ModelObject) =
         check(models[side].objects.contains(modelObject)) { "The $side model '${models[side]}' does not contain the object '$modelObject'!" }
+
+    override fun toString() = "${this::class.simpleName}[$leftModel <-> $rightModel]"
 
     private inner class Correspondences : ModelCorrespondences<Tag> {
         private val leftToRight: MutableMap<Pair<ModelObject, Tag?>, ModelObject> = HashMap()
@@ -83,4 +86,24 @@ abstract class DefaultModelTransformation<in Tag : Any> : ModelTransformation {
 
         fun getOtherSideCorrespondence(modelObject: ModelObject) = correspondences.getCorrespondence(modelObject, side)
     }
+
+    protected inline fun <T : Any> ModelObject.changeIfNot(
+        metaAttribute: MetaAttribute<T>,
+        vararg assignments: AttributeAssignment<*>,
+        valueProvider: () -> T?
+    ) {
+        if (assignments.any { !it.holdsWith(this) }) {
+            this[metaAttribute] = valueProvider()
+        }
+    }
+
+    protected class AttributeAssignment<in Target>(
+        private val value: Target,
+        private val transformation: (ModelObject) -> Target
+    ) {
+        fun holdsWith(sourceObject: ModelObject) = value == transformation(sourceObject)
+    }
+
+    protected infix fun <Target> Target.isEqualTo(valueSource: (ModelObject) -> Target) =
+        AttributeAssignment(this, valueSource)
 }
