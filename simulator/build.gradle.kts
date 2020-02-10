@@ -29,6 +29,28 @@ kotlin {
 }
 
 project.tasks.withType<KotlinWebpack> {
+    group = "web"
     devServer = devServer?.copy(open = false)
     outputFileName = "bundle.js"
+}
+
+val copyWebResources by tasks.creating(Copy::class) {
+    group = "web"
+    val processResources by tasks
+    from(processResources)
+    destinationDir = project.buildDir.resolve("web")
+}
+
+val copyWebBundle by tasks.creating(Copy::class) {
+    group = "web"
+    val browserWebpack: KotlinWebpack by tasks
+    from(browserWebpack)
+    exclude("webpack.config.*")
+    destinationDir = project.buildDir.resolve("web")
+}
+
+task("assembleWeb") {
+    group = "web"
+    dependsOn(copyWebBundle)
+    dependsOn(copyWebResources)
 }
