@@ -12,6 +12,7 @@ import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpa
 import de.joshuagleitze.transformationnetwork.simulator.styles.FontSize
 import de.joshuagleitze.transformationnetwork.simulator.styles.FontSize.large
 import de.joshuagleitze.transformationnetwork.simulator.styles.FontSize.normal
+import de.joshuagleitze.transformationnetwork.simulator.util.DataChangeEvent
 import kotlinext.js.jsObject
 import kotlinx.css.BorderStyle.solid
 import kotlinx.css.Display.inlineBlock
@@ -37,6 +38,7 @@ import kotlinx.css.px
 import kotlinx.css.textAlign
 import kotlinx.css.width
 import org.w3c.dom.HTMLElement
+import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RComponent
 import react.RContext
@@ -160,6 +162,7 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
         if (change is AdditionChange) {
             val currentList = if (state.lastModelAdditionTime < currentTime) HashSet() else state.lastAddedModels
             currentList.add(change.addedObjectIdentity)
+            state.containerRef.current?.dispatchEvent(DataChangeEvent())
             setState {
                 lastModelAdditionTime = currentTime
                 lastAddedModels = currentList

@@ -4,11 +4,10 @@ import de.joshuagleitze.transformationnetwork.publishsubscribe.Observable
 import de.joshuagleitze.transformationnetwork.publishsubscribe.PublishingObservable
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.ArrowTargetData
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.DefaultArrowTargetData
+import de.joshuagleitze.transformationnetwork.simulator.util.DataChangeEvent
 import de.joshuagleitze.transformationnetwork.simulator.util.externals.ResizeObserver
 import de.joshuagleitze.transformationnetwork.simulator.util.geometry.Coordinate
-import kotlinext.js.jsObject
 import org.w3c.dom.HTMLElement
-import org.w3c.dom.MutationObserver
 import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RComponent
@@ -16,6 +15,7 @@ import react.RHandler
 import react.RProps
 import react.RReadableRef
 import react.RState
+import kotlin.browser.document
 import kotlin.browser.window
 
 interface ArrowTargetProps : RProps {
@@ -35,8 +35,7 @@ private class ArrowTargetComponent private constructor() : RComponent<ArrowTarge
         props.children()
     }
 
-    @Suppress("UNUSED_PARAMETER") // used to make a method reference for event listeners possible
-    private fun publishData(causingEvent: Event? = null) {
+    private val publishData = { _: Event? ->
         val outerRect = targetContainer.getBoundingClientRect()
         val bottomLeft = Coordinate(outerRect.left, outerRect.bottom)
         val topRight = Coordinate(outerRect.right, outerRect.top)
@@ -45,14 +44,16 @@ private class ArrowTargetComponent private constructor() : RComponent<ArrowTarge
 
     override fun componentDidMount() {
         targetContainer = props.targetRef.current!!
-        resizeObserver = ResizeObserver { _, _ -> publishData() }
+        resizeObserver = ResizeObserver { _, _ -> publishData(null) }
         resizeObserver.observe(targetContainer)
-        publishData()
-        window.addEventListener("resize", this::publishData)
+        publishData(null)
+        window.addEventListener("resize", publishData)
+        document.addEventListener(DataChangeEvent.name, publishData)
     }
 
     override fun componentWillUnmount() {
-        window.removeEventListener("resize", this::publishData)
+        window.removeEventListener("resize", publishData)
+        document.removeEventListener(DataChangeEvent.name, publishData)
         resizeObserver.disconnect()
     }
 }

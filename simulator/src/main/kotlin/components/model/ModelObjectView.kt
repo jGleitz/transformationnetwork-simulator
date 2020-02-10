@@ -9,6 +9,8 @@ import de.joshuagleitze.transformationnetwork.simulator.styles.Colors
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.controlCornerRounding
 import de.joshuagleitze.transformationnetwork.simulator.styles.FontSize
+import de.joshuagleitze.transformationnetwork.simulator.util.DataChangeEvent
+import kotlinext.js.jsObject
 import kotlinx.css.BorderCollapse.collapse
 import kotlinx.css.BorderStyle.solid
 import kotlinx.css.Display.inlineBlock
@@ -50,13 +52,16 @@ import kotlinx.css.width
 import kotlinx.css.zIndex
 import kotlinx.html.js.onMouseOutFunction
 import kotlinx.html.js.onMouseOverFunction
+import org.w3c.dom.HTMLElement
 import react.RBuilder
 import react.RComponent
 import react.RContext
 import react.RHandler
 import react.RProps
+import react.RReadableRef
 import react.RState
 import react.RStatics
+import react.createRef
 import react.dom.span
 import react.dom.tbody
 import react.setState
@@ -102,8 +107,8 @@ private object ModelObjectStyles : StyleSheet("ModelObject") {
             }
         }
     }
-    val updatedTable by css {
-        backgroundColor = Colors.updated
+    val addedTable by css {
+        backgroundColor = Colors.added
     }
     val updatedCell by css {
         position = relative
@@ -207,11 +212,20 @@ interface ModelObjectViewProps : RProps {
 private interface ModelObjectViewState : RState {
     var lastUpdate: Int
     var lastUpdatedAttributes: List<MetaAttribute<*>>
+    var valuesTableRef: RReadableRef<HTMLElement>
 }
 
 private class ModelObjectView : RComponent<ModelObjectViewProps, ModelObjectViewState>() {
     private val currentTime: Int get() = this.asDynamic().context as Int
     private var subscribed = false
+
+    init {
+        state = jsObject {
+            valuesTableRef = createRef()
+            lastUpdate = 0
+            lastUpdatedAttributes = emptyList()
+        }
+    }
 
     override fun RBuilder.render() {
         styledDiv {
@@ -222,9 +236,10 @@ private class ModelObjectView : RComponent<ModelObjectViewProps, ModelObjectView
             +props.modelObject.metaclass.name
         }
         styledTable {
+            ref = state.valuesTableRef
             css {
                 +ModelObjectStyles.attributesTable
-                if (currentTime == props.addedTime) +ModelObjectStyles.updatedTable
+                if (currentTime == props.addedTime) +ModelObjectStyles.addedTable
                 if (props.highlighted) +ModelObjectStyles.highlighted
             }
 
@@ -259,6 +274,7 @@ private class ModelObjectView : RComponent<ModelObjectViewProps, ModelObjectView
         if (state.lastUpdate != currentTime) {
             previous = emptyList()
         }
+        state.valuesTableRef.current?.dispatchEvent(DataChangeEvent())
         setState {
             lastUpdate = currentTime
             lastUpdatedAttributes = previous + change.targetAttribute
