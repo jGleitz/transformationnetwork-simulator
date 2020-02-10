@@ -1,72 +1,55 @@
+package de.joshuagleitze.transformationnetwork.transformations
+
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
-import de.joshuagleitze.transformationnetwork.metametamodel.Model
+import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformation
+import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformationType
+import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.models.guestlist.Guest
-import de.joshuagleitze.transformationnetwork.models.guestlist.GuestMetaclass.Attributes.age
-import de.joshuagleitze.transformationnetwork.models.guestlist.GuestMetaclass.Attributes.name
+import de.joshuagleitze.transformationnetwork.models.guestlist.Guest.Metaclass.Attributes.age
+import de.joshuagleitze.transformationnetwork.models.guestlist.Guest.Metaclass.Attributes.name
 import de.joshuagleitze.transformationnetwork.models.guestlist.GuestlistMetamodel
 import de.joshuagleitze.transformationnetwork.models.persons.Person
-import de.joshuagleitze.transformationnetwork.models.persons.PersonMetaclass.Attributes.birthDate
-import de.joshuagleitze.transformationnetwork.models.persons.PersonMetaclass.Attributes.firstName
-import de.joshuagleitze.transformationnetwork.models.persons.PersonMetaclass.Attributes.lastName
+import de.joshuagleitze.transformationnetwork.models.persons.Person.Metaclass.Attributes.birthDate
+import de.joshuagleitze.transformationnetwork.models.persons.Person.Metaclass.Attributes.firstName
+import de.joshuagleitze.transformationnetwork.models.persons.Person.Metaclass.Attributes.lastName
 import de.joshuagleitze.transformationnetwork.models.persons.PersonsMetamodel
-import de.joshuagleitze.transformationnetwork.modeltransformation.DefaultModelTransformation
-import de.joshuagleitze.transformationnetwork.modeltransformation.DefaultModelTransformationType
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.LEFT
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.RIGHT
 import kotlin.js.Date
 
 private const val MILLIS_IN_YEAR = 1_000L * 60L * 60L * 24L * 365L
 
-class Persons2GuestsTransformation(val personsModel: Model, val guestlistModel: Model) :
-    DefaultModelTransformation<Nothing>() {
-    override val leftModel: Model get() = personsModel
-    override val rightModel: Model get() = guestlistModel
-    override val type get() = Companion
+class Persons2GuestsTransformation(val personsModel: ChangeRecordingModel, val guestlistModel: ChangeRecordingModel) :
+    BaseModelTransformation<Nothing>() {
+    override val leftModel: ChangeRecordingModel get() = personsModel
+    override val rightModel: ChangeRecordingModel get() = guestlistModel
+    override val type get() = Type
 
     override fun processChangesChecked(leftSide: TransformationSide, rightSide: TransformationSide) {
-        leftSide.processDeletions()
-        rightSide.processDeletions()
+        leftSide.propagateDeletionsToOtherSide()
+        rightSide.propagateDeletionsToOtherSide()
         leftSide.processAdditions()
         rightSide.processAdditions()
         processPersonModifications(leftSide)
         processGuestModifications(rightSide)
     }
 
-    private fun TransformationSide.processDeletions() {
-        deletions.forEach { deletion ->
-            getOtherSideCorrespondence(deletion.deletedObject)?.let { otherSideObject ->
-                otherSideModel -= otherSideObject
-                correspondences.removeCorrespondence(deletion.deletedObject)
-            }
-        }
-    }
-
     private fun TransformationSide.processAdditions() {
-        additions.forEach { addition ->
-            val otherSidePersonLike = createOtherSidePersonLike(addition.addedObject)
+        for (addition in additions) {
+            val otherSidePersonLike = when (side) {
+                LEFT -> Guest()
+                RIGHT -> Person()
+            }
             otherSideModel += otherSidePersonLike
-            correspondences.addCorrespondence(side, addition.addedObject, otherSidePersonLike)
-        }
-    }
-
-    private fun TransformationSide.createOtherSidePersonLike(personLike: ModelObject): ModelObject = when (side) {
-        LEFT -> Guest().apply {
-            name = nameFromFirstNameAndLastName(personLike)
-            age = ageFromBirthDate(personLike)
-        }
-        RIGHT -> Person().apply {
-            firstName = firstNameFromName(personLike)
-            lastName = lastNameFromName(personLike)
-            birthDate = birthDateFromAge(personLike)
+            correspondences.addCorrespondence(side, addition.addedObjectIdentity, otherSidePersonLike.identity)
         }
     }
 
     private fun processPersonModifications(personChanges: ChangeSet) {
-        personChanges.modifications.forEach { modification ->
-            val person = modification.targetObject
-            val correspondingGuest = correspondences.getRightCorrespondence(person)
-            checkNotNull(correspondingGuest) { "Cannot find the corresponding guest for '$person'!" }
+        for (modification in personChanges.modifications) {
+            val person = personsModel.requireObject(modification.targetObject)
+            val correspondingGuest = correspondences.requireRightCorrespondence(person)
             when (modification.targetAttribute) {
                 firstName, lastName -> correspondingGuest[name] = nameFromFirstNameAndLastName(person)
                 birthDate -> correspondingGuest[age] = ageFromBirthDate(person)
@@ -75,10 +58,9 @@ class Persons2GuestsTransformation(val personsModel: Model, val guestlistModel: 
     }
 
     private fun processGuestModifications(guestChanges: ChangeSet) {
-        guestChanges.modifications.forEach { modification ->
-            val guest = modification.targetObject
-            val correspondingPerson = correspondences.getLeftCorrespondence(guest)
-            checkNotNull(correspondingPerson) { "Cannot find the corresponding person for '$guest'!" }
+        for (modification in guestChanges.modifications) {
+            val guest = guestlistModel.requireObject(modification.targetObject)
+            val correspondingPerson = correspondences.requireLeftCorrespondence(guest)
             when (modification.targetAttribute) {
                 name -> {
                     correspondingPerson.changeIfNot(
@@ -121,8 +103,8 @@ class Persons2GuestsTransformation(val personsModel: Model, val guestlistModel: 
 
     private fun String?.nullIfEmpty() = if (this == "") null else this
 
-    companion object : DefaultModelTransformationType(PersonsMetamodel, GuestlistMetamodel) {
-        override fun createChecked(leftModel: Model, rightModel: Model) =
+    companion object Type : BaseModelTransformationType(PersonsMetamodel, GuestlistMetamodel) {
+        override fun createChecked(leftModel: ChangeRecordingModel, rightModel: ChangeRecordingModel) =
             Persons2GuestsTransformation(leftModel, rightModel)
     }
 }

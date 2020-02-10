@@ -13,14 +13,16 @@ class PublishingObservable<Data>(override var last: Data? = null) : Observable<D
         check(subscribers.remove(subscriber)) { "$subscriber was not subscribed in the first place!" }
     }
 
-    fun publishIfChanged(data: Data) {
-        if (data != last) {
-            last = data
-            subscribers.forEach { subscriber ->
-                Promise.resolve(Unit).then {
-                    subscriber(data)
-                }
+    fun publish(data: Data) {
+        last = data
+        subscribers.forEach { subscriber ->
+            Promise.resolve(Unit).then {
+                subscriber(data)
             }
         }
+    }
+
+    fun publishIfChanged(data: Data) {
+        if (data != last) publish(data)
     }
 }

@@ -4,6 +4,7 @@ interface ModelObject {
     val metaclass: Metaclass
     val attributes: MetaAttributeMap
     val model: Model?
+    val identity: ModelObjectIdentity
 
     operator fun <T : Any> get(attribute: MetaAttribute<T>) = attributes[attribute]
 

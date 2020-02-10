@@ -6,7 +6,9 @@ import de.joshuagleitze.transformationnetwork.simulator.data.arrow.ArrowTargetDa
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.DefaultArrowTargetData
 import de.joshuagleitze.transformationnetwork.simulator.util.externals.ResizeObserver
 import de.joshuagleitze.transformationnetwork.simulator.util.geometry.Coordinate
+import kotlinext.js.jsObject
 import org.w3c.dom.HTMLElement
+import org.w3c.dom.MutationObserver
 import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RComponent

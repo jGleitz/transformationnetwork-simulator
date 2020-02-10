@@ -16,4 +16,6 @@ object Colors {
     val controlHoverBorder = hsl(0, 0, 70)
     val controlBackground = hsl(0, 0, 100)
     val updated = Color("#FFEBCC")
+    val executed = Color("#6699FF")
+    val highlighted = Color("#C6FFB3")
 }

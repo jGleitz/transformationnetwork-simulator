@@ -2,7 +2,8 @@ package de.joshuagleitze.transformationnetwork.simulator.components.model
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.ModelObjectChange
-import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentifier
+import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.simulator.components.arrow.ArrowTarget
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.time
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.PositionedModel
@@ -92,7 +93,8 @@ interface ModelViewProps : RProps {
 private interface ModelViewComponentState : RState {
     var containerRef: RReadableRef<HTMLElement>
     var lastModelAdditionTime: Int
-    var lastAddedModels: MutableSet<ModelObject>
+    var lastAddedModels: MutableSet<ModelObjectIdentity>
+    var highlightedObject: ModelObjectIdentifier?
 }
 
 private interface ModelViewComponentProps : RProps, ModelViewProps {
@@ -100,11 +102,14 @@ private interface ModelViewComponentProps : RProps, ModelViewProps {
 }
 
 private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelViewComponentState>() {
+    private var subscribed = false
+
     init {
         state = jsObject {
             containerRef = createRef()
             lastModelAdditionTime = 0
             lastAddedModels = HashSet()
+            highlightedObject = null
         }
     }
 
@@ -135,8 +140,16 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
                     css { +ModelStyles.objectContainer }
                     props.model.objects.forEach { modelObject ->
                         val addedTime =
-                            if (state.lastAddedModels.contains(modelObject)) state.lastModelAdditionTime else null
-                        ModelObjectView(modelObject, addedTime)
+                            if (state.lastAddedModels.any { it.identifies(modelObject) }) state.lastModelAdditionTime
+                            else null
+                        ModelObjectView(
+                            modelObject,
+                            addedTime,
+                            highlighted = state.highlightedObject?.matches(modelObject) == true,
+                            highlighter = ::highlightObject
+                        ) {
+                            key = modelObject.identity.identifyingString
+                        }
                     }
                 }
             }
@@ -146,7 +159,7 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
     private val onModelChange = { change: ModelObjectChange ->
         if (change is AdditionChange) {
             val currentList = if (state.lastModelAdditionTime < currentTime) HashSet() else state.lastAddedModels
-            currentList.add(change.addedObject)
+            currentList.add(change.addedObjectIdentity)
             setState {
                 lastModelAdditionTime = currentTime
                 lastAddedModels = currentList
@@ -154,12 +167,39 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
         }
     }
 
+    private fun highlightObject(identifier: ModelObjectIdentifier?) {
+        if (state.highlightedObject != identifier) setState { highlightedObject = identifier }
+    }
+
     override fun componentDidMount() {
-        props.model.directChanges.subscribe(onModelChange)
+        this.props.subscribe()
     }
 
     override fun componentWillUnmount() {
-        props.model.directChanges.unsubscribe(onModelChange)
+        this.props.unsubscribe()
+    }
+
+    override fun componentDidUpdate(
+        prevProps: ModelViewComponentProps,
+        prevState: ModelViewComponentState,
+        snapshot: Any
+    ) {
+        if (this.props.model !== prevProps.model) {
+            prevProps.unsubscribe()
+            this.props.subscribe()
+        }
+    }
+
+    private fun ModelViewProps.subscribe() {
+        check(!subscribed) { "already subscribed!" }
+        model.directChanges.subscribe(onModelChange)
+        subscribed = true
+    }
+
+    private fun ModelViewProps.unsubscribe() {
+        if (subscribed) model.directChanges.unsubscribe(onModelChange)
+        else console.log("Not subscribed yet!")
+        subscribed = false
     }
 
     companion object :

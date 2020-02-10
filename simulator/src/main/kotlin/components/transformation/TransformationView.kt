@@ -1,8 +1,9 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.transformation
 
+import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
 import de.joshuagleitze.transformationnetwork.simulator.components.arrow.ArrowTarget
+import de.joshuagleitze.transformationnetwork.simulator.components.simulator.time
 import de.joshuagleitze.transformationnetwork.simulator.components.svg.AppendDef
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.ArrowTargetData
 import de.joshuagleitze.transformationnetwork.simulator.data.arrow.lineBetween
@@ -16,9 +17,11 @@ import de.joshuagleitze.transformationnetwork.simulator.util.svg.elementdsl.use
 import kotlinext.js.jsObject
 import react.RBuilder
 import react.RComponent
+import react.RContext
 import react.RHandler
 import react.RProps
 import react.RState
+import react.RStatics
 import react.setState
 import styled.StyleSheet
 import styled.css
@@ -35,13 +38,21 @@ private object TransformationStyles : StyleSheet("Transformation") {
         put("marker-start", "url(#transformationArrowHeadStart)")
         put("marker-end", "url(#transformationArrowHeadEnd)")
     }
+    val executedTransformation by css {
+        put("stroke", Colors.executed.value)
+        put("marker-start", "url(#executedTransformationArrowHeadStart)")
+        put("marker-end", "url(#executedTransformationArrowHeadEnd)")
+    }
     val transformationArrowTip by css {
         put("fill", Colors.transformation.value)
+    }
+    val executedTransformationArrowTip by css {
+        put("fill", Colors.executed.value)
     }
 }
 
 interface TransformationViewProps : RProps {
-    var transformation: ModelTransformation
+    var transformation: ObservableModelTransformation
     var coordinateSystem: SvgCoordinateSystem
     var modelArrowTargetProvider: (Model) -> ArrowTarget
 }
@@ -49,6 +60,7 @@ interface TransformationViewProps : RProps {
 private interface TransformationViewState : RState {
     var leftModelTarget: ArrowTargetData?
     var rightModelTarget: ArrowTargetData?
+    var lastExecution: Int
 }
 
 private class TransformationView : RComponent<TransformationViewProps, TransformationViewState>() {
@@ -59,44 +71,59 @@ private class TransformationView : RComponent<TransformationViewProps, Transform
         state = jsObject {
             leftModelTarget = null
             rightModelTarget = null
+            lastExecution = -1
         }
     }
+
+    private val currentTime: Int get() = this.asDynamic().context as Int
 
     override fun RBuilder.render() {
         AppendDef("transformation-markers") {
             styledPath(id = "transformationArrowHeadPath", d = "M0,-3 L0,3 L6,0 z") {
                 css { +TransformationStyles.transformationArrowTip }
             }
-            marker(
-                id = "transformationArrowHeadStart",
-                markerWidth = "$markerSize",
-                markerHeight = "$markerSize",
-                refX = "6",
-                refY = "0",
-                orient = "auto",
-                viewBox = "0 -3 6 6"
-            ) {
-                use(href = "#transformationArrowHeadPath", transform = "rotate(180 3 0)")
+            styledPath(id = "executedTransformationArrowHeadPath", d = "M0,-3 L0,3 L6,0 z") {
+                css { +TransformationStyles.executedTransformationArrowTip }
             }
+            for (prefix in arrayOf("transformation", "executedTransformation")) {
+                marker(
+                    id = "${prefix}ArrowHeadStart",
+                    markerWidth = "$markerSize",
+                    markerHeight = "$markerSize",
+                    refX = "6",
+                    refY = "0",
+                    orient = "auto",
+                    viewBox = "0 -3 6 6"
+                ) {
+                    use(href = "#${prefix}ArrowHeadPath", transform = "rotate(180 3 0)")
+                }
 
-            marker(
-                id = "transformationArrowHeadEnd",
-                markerWidth = "$markerSize",
-                markerHeight = "$markerSize",
-                refX = "0",
-                refY = "0",
-                orient = "auto",
-                viewBox = "0 -3 6 6"
-            ) {
-                use(href = "#transformationArrowHeadPath")
+                marker(
+                    id = "${prefix}ArrowHeadEnd",
+                    markerWidth = "$markerSize",
+                    markerHeight = "$markerSize",
+                    refX = "0",
+                    refY = "0",
+                    orient = "auto",
+                    viewBox = "0 -3 6 6"
+                ) {
+                    use(href = "#${prefix}ArrowHeadPath")
+                }
             }
         }
 
         computeLine()?.let { line ->
             styledLine(line) {
-                css { +TransformationStyles.transformation }
+                css {
+                    +TransformationStyles.transformation
+                    if (state.lastExecution == currentTime) +TransformationStyles.executedTransformation
+                }
             }
         }
+    }
+
+    private val onExecution = { _: Unit ->
+        if (state.lastExecution != currentTime) setState { lastExecution = currentTime }
     }
 
     override fun componentDidMount() {
@@ -105,6 +132,8 @@ private class TransformationView : RComponent<TransformationViewProps, Transform
 
         rightModelTarget = props.modelArrowTargetProvider(props.transformation.rightModel)
         rightModelTarget.data.subscribe(this.setRightModelArrowTargetData)
+
+        props.transformation.execution.subscribe(onExecution)
 
         setState {
             this.leftModelTarget = this@TransformationView.leftModelTarget.data.last
@@ -115,6 +144,8 @@ private class TransformationView : RComponent<TransformationViewProps, Transform
     override fun componentWillUnmount() {
         leftModelTarget.data.unsubscribe(this.setLeftModelArrowTargetData)
         rightModelTarget.data.unsubscribe(this.setRightModelArrowTargetData)
+
+        props.transformation.execution.unsubscribe(onExecution)
     }
 
     private val setLeftModelArrowTargetData = { data: ArrowTargetData? ->
@@ -132,10 +163,17 @@ private class TransformationView : RComponent<TransformationViewProps, Transform
                 .transformCoordinates { props.coordinateSystem.domCoordinateToSvg(it) }
         }
     }
+
+    companion object :
+        RStatics<TransformationViewProps, TransformationViewState, TransformationView, RContext<Any>>(TransformationView::class) {
+        init {
+            TransformationView.contextType = time.unsafeCast<RContext<Any>>()
+        }
+    }
 }
 
 fun RBuilder.TransformationView(
-    transformation: ModelTransformation,
+    transformation: ObservableModelTransformation,
     coordinateSystem: SvgCoordinateSystem,
     modelArrowTargetProvider: (Model) -> ArrowTarget,
     handler: RHandler<TransformationViewProps> = {}

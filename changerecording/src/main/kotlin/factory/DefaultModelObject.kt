@@ -6,34 +6,48 @@ import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ObjectSp
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording.ApplyMode.RECORD_AND_APPLY
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording.ApplyMode.RECORD_ONLY
-import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttributeMap
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
+import de.joshuagleitze.transformationnetwork.metametamodel.newObjectIdentity
+import de.joshuagleitze.transformationnetwork.metametamodel.sameValuesAs
 import de.joshuagleitze.transformationnetwork.publishsubscribe.Observable
 import de.joshuagleitze.transformationnetwork.publishsubscribe.PublishingObservable
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-abstract class DefaultModelObject(final override val metaclass: Metaclass) : ChangeRecordingModelObject {
-    override var model: ChangeRecordingModel? = null
+abstract class DefaultModelObject(final override val metaclass: Metaclass, identity: ModelObjectIdentity?) :
+    ChangeRecordingModelObject {
+    internal var internalModel: DefaultModel? = null
+    override val model: Model? get() = internalModel
     private val _attributes = AttributeMap()
     override val attributes: MetaAttributeMap get() = _attributes
     private var changeSet: ObjectSpecificAdditiveChangeSet? = null
     private var recordOnly = false
     private val _changes = PublishingObservable<AttributeSetChange<*>>()
+    override val identity = identity ?: newObjectIdentity(metaclass)
     override val directChanges: Observable<AttributeSetChange<*>> get() = _changes
 
     protected fun <T : Any> attributeAccess(attribute: MetaAttribute<T>) = _attributes.attributeAccess(attribute)
 
     protected fun import(otherModelObject: DefaultModelObject) {
-        this.model = otherModelObject.model
+        this.internalModel = otherModelObject.internalModel
         this.metaclass.attributes.forEach { attribute ->
             this[attribute] = otherModelObject[attribute]
         }
+    }
+
+    internal fun recordUntil(
+        mode: ChangeRecording.ApplyMode,
+        endObservable: PublishingObservable<Unit>
+    ): ChangeSet {
+        val resultChangeSet = prepareChangeRecording(mode)
+        endObservable.subscribe { finishChangeRecording() }
+        return resultChangeSet
     }
 
     override fun recordChanges(
@@ -41,6 +55,16 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass) : Cha
         mode: ChangeRecording.ApplyMode,
         block: () -> Unit
     ): ChangeSet {
+        val resultChangeSet = prepareChangeRecording(mode)
+        try {
+            block()
+            return resultChangeSet
+        } finally {
+            finishChangeRecording()
+        }
+    }
+
+    private fun prepareChangeRecording(mode: ChangeRecording.ApplyMode): ChangeSet {
         val resultChangeSet = ObjectSpecificAdditiveChangeSet(this)
         synchronized(this) {
             check(this.changeSet == null) { "There is already another change recording in progress for $this!" }
@@ -50,13 +74,12 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass) : Cha
             RECORD_AND_APPLY -> Unit
             RECORD_ONLY -> this.recordOnly = true
         }
-        try {
-            block()
-            return resultChangeSet
-        } finally {
-            this.changeSet = null
-            this.recordOnly = false
-        }
+        return resultChangeSet
+    }
+
+    private fun finishChangeRecording() {
+        this.changeSet = null
+        this.recordOnly = false
     }
 
     private inner class AttributeMap : MetaAttributeMap {
@@ -70,16 +93,17 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass) : Cha
         }
 
         internal fun setChecked(attribute: MetaAttribute<*>, value: Any?) {
-            check(value == null || attribute.elementType.isInstance(value)) { "value '$value' for $attribute has wrong type ${value!!::class} instead of expected ${attribute.elementType}!" }
+            attribute.checkCanBeValue(value)
             @Suppress("UNCHECKED_CAST")
-            addAndPublish { model ->
-                AttributeSetChange(
-                    model.identity,
-                    this@DefaultModelObject,
-                    attribute as MetaAttribute<Any>,
-                    oldValue = this.getChecked(attribute),
-                    newValue = value
-                )
+            if (map[attribute] != value) {
+                recordAndPublish { model ->
+                    AttributeSetChange(
+                        model.identity,
+                        sameValuesAs(this@DefaultModelObject),
+                        attribute as MetaAttribute<Any>,
+                        newValue = value
+                    )
+                }
             }
             if (!recordOnly) {
                 if (value == null) map.remove(attribute)
@@ -94,7 +118,7 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass) : Cha
             return getChecked(attribute)
         }
 
-        private fun addAndPublish(changeProducer: (Model) -> AttributeSetChange<*>) {
+        private fun recordAndPublish(changeProducer: (Model) -> AttributeSetChange<*>) {
             model?.let { model ->
                 val change = changeProducer(model)
                 changeSet?.add(change)
@@ -108,7 +132,7 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass) : Cha
         internal fun <T : Any> getChecked(attribute: MetaAttribute<T>) = map[attribute] as T?
 
         private fun checkIsMember(attribute: MetaAttribute<*>) =
-            check(metaclass.attributes.contains(attribute)) { "$attribute is not an attribute of $metaclass!" }
+            check(metaclass.attributes.contains(attribute)) { "'$attribute' is not an attribute of $metaclass!" }
 
         internal fun <T : Any> attributeAccess(attribute: MetaAttribute<T>): ReadWriteProperty<DefaultModelObject, T?> {
             checkIsMember(attribute)
@@ -127,7 +151,7 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass) : Cha
             thisRef._attributes.setChecked(attribute, value)
     }
 
-    override fun toString() = "${metaclass.name}($_attributes)"
+    override fun toString() = "$identity($_attributes)"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

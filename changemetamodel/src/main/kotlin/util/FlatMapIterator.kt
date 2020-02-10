@@ -3,14 +3,9 @@ package de.joshuagleitze.transformationnetwork.changemetamodel.util
 class FlatMapIterator<T>(private val outerIterator: Iterator<Iterable<T>>) : Iterator<T> {
     private var currentIterator: Iterator<T>? = null
 
-    override fun hasNext() = findNextIterator()?.hasNext() == true || outerIterator.hasNext()
+    override fun hasNext() = findNextIterator()?.hasNext() == true
 
-    override fun next(): T =
-        findNextIterator().let { currentIterator ->
-            if (currentIterator == null || !currentIterator.hasNext()) {
-                throw NoSuchElementException()
-            } else currentIterator
-        }.next()
+    override fun next(): T = findNextIterator()?.next() ?: throw NoSuchElementException()
 
     private fun findNextIterator(): Iterator<T>? {
         var iterator = currentIterator

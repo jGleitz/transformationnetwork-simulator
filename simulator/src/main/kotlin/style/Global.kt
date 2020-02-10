@@ -2,8 +2,9 @@ package de.joshuagleitze.transformationnetwork.simulator.styles
 
 import de.joshuagleitze.transformationnetwork.simulator.style.Font
 import de.joshuagleitze.transformationnetwork.simulator.styles.Colors.controlBackground
-import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.controlCornerRounding
+import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.horizontalControlPadding
+import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.verticalControlPadding
 import kotlinx.css.BorderStyle.solid
 import kotlinx.css.CSSBuilder
 import kotlinx.css.backgroundColor
@@ -47,7 +48,7 @@ val globalStyleSheet = CSSBuilder().apply {
         borderWidth = 1.px
         backgroundColor = controlBackground
         fontFamily = Font.defaultFamilies
-        padding(vertical = FontSize.normal * 0.5, horizontal = baseSpacing)
+        padding(vertical = verticalControlPadding, horizontal = horizontalControlPadding)
 
         hover {
             borderColor = Colors.controlHoverBorder

@@ -1,7 +1,7 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.transformation
 
+import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
 import de.joshuagleitze.transformationnetwork.simulator.components.arrow.ArrowTarget
 import de.joshuagleitze.transformationnetwork.simulator.components.svg.SvgDefReceiver
 import de.joshuagleitze.transformationnetwork.simulator.util.geometry.Coordinate
@@ -41,7 +41,7 @@ private object TransformationCanvasStyles : StyleSheet("TransformationCanvas") {
 
 interface TransformationCanvasProps : RProps {
     var modelArrowTargetProvider: (Model) -> ArrowTarget
-    var transformations: Set<ModelTransformation>
+    var transformations: Set<ObservableModelTransformation>
 }
 
 private interface TransformationState : RState {
@@ -89,7 +89,7 @@ private class TransformationCanvas : RComponent<TransformationCanvasProps, Trans
 
 fun RBuilder.TransformationCanvas(
     modelArrowTargetProvider: (Model) -> ArrowTarget,
-    transformations: Set<ModelTransformation>
+    transformations: Set<ObservableModelTransformation>
 ) = child(TransformationCanvas::class) {
     attrs.modelArrowTargetProvider = modelArrowTargetProvider
     attrs.transformations = transformations

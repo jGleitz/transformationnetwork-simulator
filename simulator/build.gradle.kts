@@ -5,11 +5,15 @@ dependencies {
     implementation(name = "kotlin-styled", version = "1.0.0-pre.87-kotlin-1.3.50", group = "org.jetbrains")
 
     implementation(project(":publishsubscribe"))
-    implementation(project(":changerecording"))
     implementation(project(":network"))
     implementation(project(":models:persons"))
     implementation(project(":models:guestlist"))
+    implementation(project(":models:uml"))
+    implementation(project(":models:java"))
+    implementation(project(":models:openapi"))
     implementation(project(":transformations:persons2guests"))
+    implementation(project(":transformations:uml2java"))
+    implementation(project(":transformations:java2openapi"))
 }
 
 kotlin {

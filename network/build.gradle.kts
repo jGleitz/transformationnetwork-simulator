@@ -1,5 +1,5 @@
 dependencies {
     api(project(":metametamodel"))
     api(project(":modeltransformation"))
-    implementation(project(":changerecording"))
+    api(project(":changerecording"))
 }

@@ -1,12 +1,13 @@
 package de.joshuagleitze.transformationnetwork.simulator.data.scenario
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
+import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
 
 class SimulatorScenario(
     val name: String,
     models: List<PositionedModel>,
-    transformations: Set<ModelTransformation>,
+    transformations: Set<ObservableModelTransformation>,
     val changes: List<ChangeSet>
 ) {
     private val originalModels = models

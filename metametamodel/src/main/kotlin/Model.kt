@@ -10,7 +10,10 @@ interface Model {
     fun removeObject(modelObject: ModelObject): Model = apply { minusAssign(modelObject) }
     operator fun plusAssign(modelObject: ModelObject)
     operator fun minusAssign(modelObject: ModelObject)
-    fun getSameValuedObject(modelObject: ModelObject): ModelObject?
+    fun containsObject(identifier: ModelObjectIdentifier): Boolean = getObject(identifier) != null
+    fun getObject(identifier: ModelObjectIdentifier): ModelObject?
+    fun requireObject(identifier: ModelObjectIdentifier): ModelObject =
+        getObject(identifier) ?: error("cannot find the object identified by $identifier!")
 
     fun copy(): Model
 }

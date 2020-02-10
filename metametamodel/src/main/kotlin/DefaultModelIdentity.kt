@@ -1,9 +1,11 @@
 package de.joshuagleitze.transformationnetwork.metametamodel
 
 data class DefaultModelIdentity(private val value: Int, override val metamodel: Metamodel) : ModelIdentity {
-    override fun identifies(model: Model) = model.identity == this
+    override fun identifies(candidate: Model) = candidate.identity == this
 
-    override fun toString() = "$metamodel#$value"
+    override val identifyingString: String get() = "$metamodel#$value"
+
+    override fun toString() = identifyingString
 }
 
 private var identityCount = 0

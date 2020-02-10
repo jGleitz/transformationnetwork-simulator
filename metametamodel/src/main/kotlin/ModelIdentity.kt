@@ -1,6 +1,5 @@
 package de.joshuagleitze.transformationnetwork.metametamodel
 
-interface ModelIdentity {
+interface ModelIdentity: Identity<Model> {
     val metamodel: Metamodel
-    fun identifies(model: Model): Boolean
 }

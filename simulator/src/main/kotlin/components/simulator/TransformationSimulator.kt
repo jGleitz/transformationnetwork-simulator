@@ -24,6 +24,7 @@ import kotlinx.css.gridRowStart
 import kotlinx.css.gridTemplateRows
 import kotlinx.css.height
 import kotlinx.css.marginRight
+import kotlinx.css.marginTop
 import kotlinx.css.padding
 import kotlinx.css.paddingRight
 import kotlinx.css.pct
@@ -71,6 +72,7 @@ private object TransformationSimulatorStyles : StyleSheet("TransformationSimulat
         }
     }
     val scenarioControls by css {
+        marginTop = baseSpacing
         gridRowStart = GridRowStart("controls")
     }
     val canvasOuter by css {

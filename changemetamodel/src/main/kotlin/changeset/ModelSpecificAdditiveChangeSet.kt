@@ -4,64 +4,51 @@ import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.DeletionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.ModelChange
+import de.joshuagleitze.transformationnetwork.changemetamodel.util.plus
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelIdentity
-import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 
 class ModelSpecificAdditiveChangeSet private constructor(
     val targetModel: ModelIdentity,
-    private val _additions: MutableMap<ModelObject, AdditionChange>,
-    private val _deletions: MutableMap<ModelObject, DeletionChange>
+    private val _additions: MutableSet<AdditionChange>,
+    private val _deletions: MutableSet<DeletionChange>,
+    private val _modifications: MutableSet<AttributeChange>
 ) : AdditiveChangeSet {
-    constructor(targetModel: ModelIdentity) : this(targetModel, HashMap(), HashMap())
+    constructor(targetModel: ModelIdentity) : this(targetModel, HashSet(), HashSet(), HashSet())
 
     override val affectedModels: Set<ModelIdentity> get() = if (isEmpty()) emptySet() else setOf(targetModel)
-    override val additions: Collection<AdditionChange> get() = _additions.values
-    override val deletions: Collection<DeletionChange> get() = _deletions.values
-    override val modifications: Collection<AttributeChange> get() = emptyList()
-    override val size: Int get() = _additions.size + _deletions.size
+    override val additions: Collection<AdditionChange> get() = _additions
+    override val deletions: Collection<DeletionChange> get() = _deletions
+    override val modifications: Collection<AttributeChange> get() = _modifications
+    override val size: Int get() = _additions.size + _deletions.size + _modifications.size
 
     override fun add(change: ModelChange): Boolean {
         check(change.targetModel == this.targetModel) { "The change’s '$change' target model is not this change set’s target model!" }
         return when (change) {
-            is AdditionChange -> addAdditionChange(change)
-            is DeletionChange -> addDeletionChange(change)
-            is AttributeChange -> error("Cannot add an ${AttributeChange::class.simpleName} to a ${this::class.simpleName}!")
+            is AdditionChange -> _additions.add(change)
+            is DeletionChange -> _deletions.add(change)
+            is AttributeChange -> _modifications.add(change)
         }
-    }
-
-    private fun addAdditionChange(change: AdditionChange): Boolean {
-        if (!_deletions.containsKey(change.addedObject)) {
-            return _additions.put(change.addedObject, change) == null
-        }
-        return false
-    }
-
-    private fun addDeletionChange(change: DeletionChange): Boolean {
-        _additions -= change.deletedObject
-        return _deletions.put(change.deletedObject, change) == null
     }
 
     override fun addAll(changes: Collection<ModelChange>) =
         changes.fold(false) { lastResult, change -> add(change) || lastResult }
 
     override fun addAll(changes: ChangeSet): Boolean {
-        check(changes.modifications.isEmpty()) { "Cannot add an ${AttributeChange::class.simpleName} to a ${this::class.simpleName}!" }
-        val additionResult =
-            changes.additions.fold(false) { lastResult, change -> addAdditionChange(change) || lastResult }
-        val deletionResult =
-            changes.deletions.fold(false) { lastResult, change -> addDeletionChange(change) || lastResult }
-        return additionResult || deletionResult
+        val additionResult = _additions.addAll(changes.additions)
+        val deletionResult = _deletions.addAll(changes.deletions)
+        val modificationResult = _modifications.addAll(changes.modifications)
+        return additionResult || deletionResult || modificationResult
     }
 
     override fun contains(element: ModelChange) = when (element) {
-        is AdditionChange -> _additions[element.addedObject] == element
-        is DeletionChange -> _deletions[element.deletedObject] == element
-        is AttributeChange -> false
-    }
+        is AdditionChange -> _additions
+        is DeletionChange -> _deletions
+        is AttributeChange -> _modifications
+    }.contains(element)
 
     override fun containsAll(elements: Collection<ModelChange>) = elements.all { contains(it) }
 
-    override fun isEmpty() = _additions.isEmpty() && _deletions.isEmpty()
+    override fun isEmpty() = _additions.isEmpty() && _deletions.isEmpty() && _modifications.isEmpty()
 
     override fun filterByModel(modelIdentity: ModelIdentity) =
         if (modelIdentity == targetModel) this else ChangeSet.EMPTY
@@ -69,22 +56,13 @@ class ModelSpecificAdditiveChangeSet private constructor(
     override fun copy() =
         ModelSpecificAdditiveChangeSet(
             this.targetModel,
-            HashMap(this._additions),
-            HashMap(this._deletions)
+            HashSet(this._additions),
+            HashSet(this._deletions),
+            HashSet(this._modifications)
         )
 
-    override fun iterator(): Iterator<ModelChange> {
-        val addedIterator = _additions.values.iterator()
-        val deletedIterator = _deletions.values.iterator()
-        return object : Iterator<ModelChange> {
-            override fun hasNext() = addedIterator.hasNext() || deletedIterator.hasNext()
-
-            override fun next() = when {
-                addedIterator.hasNext() -> addedIterator
-                else -> deletedIterator
-            }.next()
-        }
-    }
+    override fun iterator(): Iterator<ModelChange> =
+        _additions.iterator() + _deletions.iterator() + _modifications.iterator()
 
     override fun equals(other: Any?) = standardEquals(other)
     override fun hashCode() = standardHashCode()
