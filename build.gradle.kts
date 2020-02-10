@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version "1.3.61"
+    kotlin("js") version "1.3.70-eap-184"
     idea
 }
 
@@ -9,7 +9,8 @@ allprojects {
 
     repositories {
         jcenter()
-        maven { setUrl("https://kotlin.bintray.com/kotlin-js-wrappers") }
+        maven("https://kotlin.bintray.com/kotlin-js-wrappers")
+        maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 }
 

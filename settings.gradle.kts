@@ -1,5 +1,12 @@
 rootProject.name = "transformationnetwork-simulator"
 
+pluginManagement {
+    repositories {
+        jcenter()
+        maven("https://dl.bintray.com/kotlin/kotlin-eap")
+    }
+}
+
 include(":publishsubscribe")
 include(":metametamodel")
 include(":modeltransformation")
