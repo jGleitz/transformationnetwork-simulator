@@ -1,13 +1,14 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.simulator
 
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
-import de.joshuagleitze.transformationnetwork.network.PropagationStrategy
 import de.joshuagleitze.transformationnetwork.simulator.components.model.ModelCanvas
 import de.joshuagleitze.transformationnetwork.simulator.components.transformation.TransformationCanvas
+import de.joshuagleitze.transformationnetwork.simulator.data.Described
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.SimulatorScenario
+import de.joshuagleitze.transformationnetwork.simulator.data.strategy.DescribedPropagationStrategy
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import de.joshuagleitze.transformationnetwork.simulator.util.checkAvailable
-import kotlinext.js.jsObject
+import encodeURIComponent
 import kotlinx.css.Align
 import kotlinx.css.BoxSizing
 import kotlinx.css.Display.flex
@@ -32,6 +33,11 @@ import kotlinx.css.position
 import kotlinx.css.px
 import kotlinx.css.width
 import kotlinx.css.zIndex
+import org.w3c.dom.History
+import org.w3c.dom.Location
+import org.w3c.dom.events.Event
+import org.w3c.dom.url.URL
+import org.w3c.dom.url.URLSearchParams
 import react.RBuilder
 import react.RComponent
 import react.RProps
@@ -42,6 +48,7 @@ import react.setState
 import styled.StyleSheet
 import styled.css
 import styled.styledDiv
+import kotlin.browser.window
 
 private object TransformationSimulatorStyles : StyleSheet("TransformationSimulator") {
     val simulator by css {
@@ -93,20 +100,22 @@ private interface TransformationSimulatorState : RState {
 
 private interface TransformationSimulatorProps : RProps {
     var scenarios: List<SimulatorScenario>
-    var strategies: List<PropagationStrategy>
+    var strategies: List<DescribedPropagationStrategy>
 }
 
 private var resetCounter = 0
 
-private class TransformationSimulator : RComponent<TransformationSimulatorProps, TransformationSimulatorState>() {
-    init {
-        state = jsObject {
-            modelCanvasRef = createRef()
-            scenarioIndex = 0
-            strategyIndex = 0
-            time = 0
-            resetCount = resetCounter++
-        }
+private const val strategyQueryParameter = "strategy"
+private const val scenarioQueryParameter = "scenario"
+
+private class TransformationSimulator(props: TransformationSimulatorProps) :
+    RComponent<TransformationSimulatorProps, TransformationSimulatorState>(props) {
+    override fun TransformationSimulatorState.init(props: TransformationSimulatorProps) {
+        modelCanvasRef = createRef()
+        scenarioIndex = findScenarioIndexFromQuery(props)
+        strategyIndex = findStrategyIndexFromQuery(props)
+        time = 0
+        resetCount = resetCounter++
     }
 
     override fun RBuilder.render() {
@@ -128,7 +137,7 @@ private class TransformationSimulator : RComponent<TransformationSimulatorProps,
                     styledDiv {
                         css { +TransformationSimulatorStyles.parameterSelector }
 
-                        ScenarioSelector(props.scenarios, state.scenarioIndex, ::setScenarioIndex)
+                        ScenarioSelector(props.scenarios, state.scenarioIndex, ::setScenarioQuery)
                     }
 
                     styledDiv {
@@ -139,7 +148,7 @@ private class TransformationSimulator : RComponent<TransformationSimulatorProps,
                     styledDiv {
                         css { +TransformationSimulatorStyles.parameterSelector }
 
-                        StrategySelector(props.strategies, state.strategyIndex, ::setStrategyIndex)
+                        StrategySelector(props.strategies, state.strategyIndex, ::setStrategyQuery)
                     }
                 }
 
@@ -180,16 +189,18 @@ private class TransformationSimulator : RComponent<TransformationSimulatorProps,
     private fun getArrowTargetFromModelCanvas(model: Model) =
         checkAvailable(state.modelCanvasRef.current).getArrowTarget(model)
 
-    private fun setScenarioIndex(index: Int) {
-        if (index != state.scenarioIndex) resetSimulation {
-            scenarioIndex = index
+    private fun setScenarioQuery(index: Int) {
+        window.history.replaceQuery {
+            set(scenarioQueryParameter, props.scenarios[index].name.toUrlFormat())
         }
+        updateActiveScenarioAndStrategy(null)
     }
 
-    private fun setStrategyIndex(index: Int) {
-        if (index != state.strategyIndex) resetSimulation {
-            strategyIndex = index
+    private fun setStrategyQuery(index: Int) {
+        window.history.replaceQuery {
+            set(strategyQueryParameter, props.strategies[index].name.toUrlFormat())
         }
+        updateActiveScenarioAndStrategy(null)
     }
 
     private fun resetSimulation(stateModifier: TransformationSimulatorState.() -> Unit = {}) {
@@ -202,11 +213,53 @@ private class TransformationSimulator : RComponent<TransformationSimulatorProps,
             stateModifier()
         }
     }
+
+    override fun componentDidMount() {
+        setScenarioQuery(state.scenarioIndex)
+        setStrategyQuery(state.strategyIndex)
+        window.addEventListener("popstate", updateActiveScenarioAndStrategy)
+    }
+
+    override fun componentWillUnmount() {
+        window.removeEventListener("popstate", updateActiveScenarioAndStrategy)
+    }
+
+    val updateActiveScenarioAndStrategy = { _: Event? ->
+        val newScenarioIndex = findScenarioIndexFromQuery()
+        val newStrategyIndex = findStrategyIndexFromQuery()
+        if (newScenarioIndex != state.scenarioIndex || newStrategyIndex != state.strategyIndex) resetSimulation {
+            scenarioIndex = newScenarioIndex
+            strategyIndex = newStrategyIndex
+        }
+    }
+
+    private fun findScenarioIndexFromQuery(props: TransformationSimulatorProps = this.props) =
+        props.scenarios.findIndexByUrlName(window.location.searchParams[scenarioQueryParameter]) ?: 0
+
+    private fun findStrategyIndexFromQuery(props: TransformationSimulatorProps = this.props) =
+        props.strategies.findIndexByUrlName(window.location.searchParams[strategyQueryParameter]) ?: 0
+
+    private fun String.toUrlFormat() = encodeURIComponent(replace(Regex("\\W+"), "-"))
+
+    private fun History.replaceQuery(block: URLSearchParams.() -> Unit) {
+        val url = URL(window.location.toString())
+        url.searchParams.block()
+        this.replaceState(null, "", url.toString())
+    }
+
+    private val Location.searchParams get() = URLSearchParams(this.search)
+
+    private operator fun URLSearchParams.get(name: String) = this.get(name)
+
+    private fun <T : Described> List<T>.findIndexByUrlName(searchedUrlName: String?) =
+        if (searchedUrlName == null) null
+        else this.indexOfFirst { it.name.toUrlFormat() == searchedUrlName }.takeIf { it != -1 }
 }
 
-
-fun RBuilder.TransformationSimulator(scenarios: List<SimulatorScenario>, strategies: List<PropagationStrategy>) =
-    child(TransformationSimulator::class) {
-        attrs.scenarios = scenarios
-        attrs.strategies = strategies
-    }
+fun RBuilder.TransformationSimulator(
+    scenarios: List<SimulatorScenario>,
+    strategies: List<DescribedPropagationStrategy>
+) = child(TransformationSimulator::class) {
+    attrs.scenarios = scenarios
+    attrs.strategies = strategies
+}

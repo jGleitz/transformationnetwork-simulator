@@ -1,0 +1,6 @@
+package de.joshuagleitze.transformationnetwork.simulator.data.strategy
+
+import de.joshuagleitze.transformationnetwork.network.PropagationStrategy
+import de.joshuagleitze.transformationnetwork.simulator.data.Described
+
+interface DescribedPropagationStrategy : PropagationStrategy, Described

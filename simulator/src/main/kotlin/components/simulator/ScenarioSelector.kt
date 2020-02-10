@@ -20,6 +20,8 @@ fun RBuilder.ScenarioSelector(
     ReactSelect(
         options,
         value = options[selectedScenarioIndex],
-        onChange = { selectedEntry, _ -> if (selectedEntry != null) setScenarioIndex(selectedEntry.value) }
+        onChange = { selectedEntry, _ ->
+            if (selectedEntry != null) setScenarioIndex(selectedEntry.value)
+        }
     )
 }

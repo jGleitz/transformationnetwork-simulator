@@ -1,6 +1,5 @@
 package de.joshuagleitze.transformationnetwork.simulator.util.externals
 
-import kotlinext.js.jsObject
 import org.w3c.dom.DOMRectReadOnly
 import org.w3c.dom.Element
 

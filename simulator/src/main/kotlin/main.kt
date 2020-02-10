@@ -25,6 +25,7 @@ import de.joshuagleitze.transformationnetwork.simulator.components.simulator.Tra
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.SimulatorScenario
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.at
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.x
+import de.joshuagleitze.transformationnetwork.simulator.data.strategy.describe
 import de.joshuagleitze.transformationnetwork.simulator.styles.globalStyleSheet
 import de.joshuagleitze.transformationnetwork.transformations.Java2OpenApiTransformation
 import de.joshuagleitze.transformationnetwork.transformations.Persons2GuestsTransformation
@@ -108,7 +109,9 @@ private val scenarios by lazy {
     )
 }
 
-private val strategies = listOf(UnboundedPropagation())
+private val strategies = listOf(
+    UnboundedPropagation().describe(name = "Unbounded Propagation")
+)
 
 fun main() {
     window.onload = {

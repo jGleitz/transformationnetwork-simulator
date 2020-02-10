@@ -3,13 +3,14 @@ package de.joshuagleitze.transformationnetwork.simulator.data.scenario
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
+import de.joshuagleitze.transformationnetwork.simulator.data.Described
 
 class SimulatorScenario(
-    val name: String,
+    override val name: String,
     models: List<PositionedModel>,
     transformations: Set<ObservableModelTransformation>,
     val changes: List<ChangeSet>
-) {
+): Described {
     private val originalModels = models
     private val originalTransformations = transformations
     private lateinit var currentNetwork: PositionedTransformationNetwork
