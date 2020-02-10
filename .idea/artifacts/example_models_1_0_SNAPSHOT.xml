@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="example-models-1.0-SNAPSHOT">
-    <output-path>$PROJECT_DIR$/example-models/build/libs</output-path>
-    <root id="archive" name="example-models-1.0-SNAPSHOT.jar">
-      <element id="module-output" name="de.joshuagleitze.example-models.main" />
-    </root>
-  </artifact>
-</component>

@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="metamodelling">
-    <output-path>$PROJECT_DIR$/metamodelling/build/libs</output-path>
-    <root id="archive" name="metamodelling.jar">
-      <element id="module-output" name="transformationnetwork.metamodelling.main" />
-    </root>
-  </artifact>
-</component>
