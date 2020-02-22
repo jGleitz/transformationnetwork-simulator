@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 dependencies {
     implementation(name = "kotlin-react-dom", version = "16.9.0-pre.91-kotlin-1.3.61", group = "org.jetbrains")
-    implementation(name = "kotlin-styled", version = "1.0.0-pre.87-kotlin-1.3.50", group = "org.jetbrains")
+    implementation(name = "kotlin-styled", version = "1.0.0-pre.91-kotlin-1.3.61", group = "org.jetbrains")
 
     implementation(project(":publishsubscribe"))
     implementation(project(":network"))
