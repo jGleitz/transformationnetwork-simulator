@@ -15,12 +15,12 @@ dependencies {
     implementation(project(":transformations:uml2java"))
     implementation(project(":transformations:java2openapi"))
 
-    implementation(npm("react", "16.9.0"))
-    implementation(npm("react-dom", "16.9.0"))
-    implementation(npm("core-js", "3.3.2"))
-    implementation(npm("styled-components", "4.4.0"))
-    implementation(npm("inline-style-prefixer", "5.1.0"))
-    implementation(npm("react-select", "3.0.8"))
+    implementation(npm("react", "16.13.1"))
+    implementation(npm("react-dom", "16.13.1"))
+    implementation(npm("core-js", "3.6.5"))
+    implementation(npm("styled-components", "5.1.0"))
+    implementation(npm("inline-style-prefixer", "6.0.0"))
+    implementation(npm("react-select", "3.1.0"))
     implementation(npm("use-force-update", "1.0.7"))
 }
 
