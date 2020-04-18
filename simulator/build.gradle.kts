@@ -4,7 +4,11 @@ dependencies {
     val kotlinReactVersion = "16.13.0-pre.97-kotlin-1.3.72"
     implementation(name = "kotlin-react", version = kotlinReactVersion, group = "org.jetbrains")
     implementation(name = "kotlin-react-dom", version = kotlinReactVersion, group = "org.jetbrains")
-    implementation(name = "kotlin-styled", version = "1.0.0-pre.94-kotlin-1.3.70", group = "org.jetbrains")
+    val kotlinCssVersion = "1.0.0-pre.97-kotlin-1.3.72"
+    implementation(name = "kotlin-styled", version = kotlinCssVersion, group = "org.jetbrains")
+    implementation(name = "kotlin-css-js", version = kotlinCssVersion, group = "org.jetbrains")
+    implementation(name = "kotlin-extensions", version = "1.0.1-pre.97-kotlin-1.3.72", group = "org.jetbrains")
+    implementation(name = "kotlinx-html-js", version = "0.7.1", group = "org.jetbrains.kotlinx")
 
     implementation(project(":publishsubscribe"))
     implementation(project(":network"))
@@ -17,8 +21,10 @@ dependencies {
     implementation(project(":transformations:uml2java"))
     implementation(project(":transformations:java2openapi"))
 
-    implementation(npm("react", "16.13.1"))
-    implementation(npm("react-dom", "16.13.1"))
+    val reactVersion = "16.13.1"
+    implementation(npm("react", reactVersion))
+    implementation(npm("react-dom", reactVersion))
+    implementation(npm("react-is", reactVersion))
     implementation(npm("core-js", "3.6.5"))
     implementation(npm("styled-components", "5.1.0"))
     implementation(npm("inline-style-prefixer", "6.0.0"))
