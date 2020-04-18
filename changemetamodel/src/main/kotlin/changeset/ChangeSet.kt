@@ -18,8 +18,7 @@ interface ChangeSet : Set<ModelChange> {
     fun filterByModel(modelIdentity: ModelIdentity): ChangeSet
 
     companion object {
-        val EMPTY = object :
-            ChangeSet {
+        val EMPTY = object : ChangeSet {
             override val affectedModels: Set<ModelIdentity> get() = emptySet()
             override val deletions: Collection<DeletionChange<*>> get() = emptySet()
             override val additions: Collection<AdditionChange<*>> get() = emptySet()

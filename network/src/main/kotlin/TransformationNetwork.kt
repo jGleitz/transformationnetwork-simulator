@@ -15,4 +15,5 @@ interface TransformationNetwork {
 
     fun getModel(modelIdentity: ModelIdentity): ChangeRecordingModel?
     operator fun get(modelIdentity: ModelIdentity) = getModel(modelIdentity)
+    fun subnetwork(transformations: Set<ModelTransformation>): TransformationNetwork
 }

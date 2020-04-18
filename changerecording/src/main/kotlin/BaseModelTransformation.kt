@@ -7,6 +7,7 @@ import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
+import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.byIdentity
@@ -43,6 +44,13 @@ abstract class BaseModelTransformation : ObservableModelTransformation {
             LEFT -> leftModel
             RIGHT -> rightModel
         }
+
+        override val size = 2
+        override fun contains(element: Model) = leftModel == element || rightModel == element
+        override fun containsAll(elements: Collection<Model>) = elements.size <= 2 && elements.all { this.contains(it) }
+        override fun isEmpty() = false
+
+        override fun iterator() = iterator { yield(leftModel); yield(rightModel) }
     }
 
     protected fun TransformationSide.propagateDeletionsToOtherSide(vararg tags: AnyCorrespondenceTag) =
