@@ -24,7 +24,7 @@ interface ModelTransformation {
         override fun toString() = this.name.toLowerCase()
     }
 
-    interface TransformationModels {
+    interface TransformationModels : Set<Model> {
         operator fun get(side: Side): Model
     }
 }

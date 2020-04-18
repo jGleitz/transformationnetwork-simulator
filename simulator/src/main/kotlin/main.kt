@@ -21,6 +21,7 @@ import de.joshuagleitze.transformationnetwork.models.uml.Interface
 import de.joshuagleitze.transformationnetwork.models.uml.Method
 import de.joshuagleitze.transformationnetwork.models.uml.UmlMetamodel
 import de.joshuagleitze.transformationnetwork.network.strategies.OncePerTransformation
+import de.joshuagleitze.transformationnetwork.network.strategies.StepByStep
 import de.joshuagleitze.transformationnetwork.network.strategies.UnboundedPropagation
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.TransformationSimulator
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.SimulatorScenario
@@ -112,6 +113,7 @@ private val scenarios by lazy {
 
 private val strategies = listOf(
     UnboundedPropagation().describe(name = "Unbounded Propagation"),
+    StepByStep().describe(name = "Step by Step"),
     OncePerTransformation().describe(name = "Once per Transformation")
 )
 
