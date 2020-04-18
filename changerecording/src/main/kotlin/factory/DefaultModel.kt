@@ -1,18 +1,21 @@
 package de.joshuagleitze.transformationnetwork.changerecording.factory
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
+import de.joshuagleitze.transformationnetwork.changemetamodel.AnyModelObjectChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.DeletionChange
-import de.joshuagleitze.transformationnetwork.changemetamodel.ModelObjectChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.AdditiveChangeSet
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.DefaultAdditiveChangeSet
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ModelSpecificAdditiveChangeSet
+import de.joshuagleitze.transformationnetwork.changerecording.AnyChangeRecordingModelObject
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording.ApplyMode.RECORD_ONLY
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording.RecordDepth.DIRECT_ONLY
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording.RecordDepth.RECURSIVE
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.Metamodel
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
@@ -22,7 +25,7 @@ import de.joshuagleitze.transformationnetwork.metametamodel.sameValuesAs
 import de.joshuagleitze.transformationnetwork.publishsubscribe.Observable
 import de.joshuagleitze.transformationnetwork.publishsubscribe.PublishingObservable
 
-fun Metamodel.model(name: String, vararg objects: ChangeRecordingModelObject): ChangeRecordingModel {
+fun Metamodel.model(name: String, vararg objects: AnyChangeRecordingModelObject): ChangeRecordingModel {
     val metamodel = this
     objects.forEach {
         check(metamodel.classes.contains(it.metaclass)) { "$it’s metaclass ${it.metaclass} does not belong to $metamodel!" }
@@ -32,19 +35,19 @@ fun Metamodel.model(name: String, vararg objects: ChangeRecordingModelObject): C
 
 internal class DefaultModel private constructor(
     override val name: String,
-    objects: Iterable<ChangeRecordingModelObject>,
+    objects: Iterable<AnyChangeRecordingModelObject>,
     override val identity: ModelIdentity
 ) : ChangeRecordingModel {
     override val metamodel: Metamodel get() = identity.metamodel
     private var changeRecording: ChangeRecordingProcess? = null
-    private val _objects: MutableSet<ChangeRecordingModelObject> = LinkedHashSet()
-    override val objects: Set<ChangeRecordingModelObject> get() = _objects
-    private val _changes = PublishingObservable<ModelObjectChange>()
-    override val directChanges: Observable<ModelObjectChange> get() = _changes
+    private val _objects: MutableSet<AnyChangeRecordingModelObject> = LinkedHashSet()
+    override val objects: Set<AnyChangeRecordingModelObject> get() = _objects
+    private val _changes = PublishingObservable<AnyModelObjectChange>()
+    override val directChanges: Observable<AnyModelObjectChange> get() = _changes
 
     private val recordOnly get() = this.changeRecording?.mode == RECORD_ONLY
 
-    constructor(name: String, metamodel: Metamodel, objects: Iterable<ChangeRecordingModelObject>)
+    constructor(name: String, metamodel: Metamodel, objects: Iterable<AnyChangeRecordingModelObject>)
             : this(name, objects, newIdentity(metamodel))
 
     init {
@@ -53,24 +56,24 @@ internal class DefaultModel private constructor(
         }
     }
 
-    override fun plusAssign(modelObject: ModelObject) {
+    override fun plusAssign(modelObject: AnyModelObject) {
         check(metamodel.classes.contains(modelObject.metaclass)) { "$modelObject’s metaclass '${modelObject.metaclass}' does not belong to this model’s metamodel '$metamodel'!" }
-        if (modelObject is DefaultModelObject && !recordOnly) {
+        if (modelObject is DefaultModelObject<*> && !recordOnly) {
             modelObject.internalModel = this
         }
-        modelObject as ChangeRecordingModelObject
+        modelObject as ChangeRecordingModelObject<Nothing>
         val isChange = if (!recordOnly) _objects.add(modelObject) else !_objects.contains(modelObject)
         if (isChange) recordAndPublish(AdditionChange(this.identity, modelObject.metaclass, modelObject.identity))
         val changeRecording = this.changeRecording
         if (changeRecording?.depth == RECURSIVE) {
-            if (modelObject is DefaultModelObject) {
+            if (modelObject is DefaultModelObject<*>) {
                 val objectChanges = modelObject.recordUntil(changeRecording.mode, changeRecording.endObservable)
                 changeRecording.addAdditionalChanges(objectChanges)
             }
         }
     }
 
-    override fun minusAssign(modelObject: ModelObject) {
+    override fun minusAssign(modelObject: AnyModelObject) {
         check(objects.contains(modelObject)) { "this model does not contain the model object '$modelObject'!" }
         if (modelObject is DefaultModelObject && !recordOnly) {
             modelObject.internalModel = null
@@ -80,15 +83,22 @@ internal class DefaultModel private constructor(
         if (isChange) recordAndPublish(DeletionChange(this.identity, sameValuesAs(modelObject)))
     }
 
-    private fun recordAndPublish(change: ModelObjectChange) {
+    override fun minusAssign(modelObject: AnyModelObjectIdentity) = minusAssign(
+        checkNotNull(objects.find { modelObject.identifies(it) }) {
+            { "this model does not contain a model object identified by '$modelObject'!" }
+        }
+    )
+
+    private fun recordAndPublish(change: AnyModelObjectChange) {
         changeRecording?.set?.add(change)
         if (!recordOnly) {
             _changes.publishIfChanged(change)
         }
     }
 
-    override fun getObject(identifier: ModelObjectIdentifier): ChangeRecordingModelObject? =
-        _objects.find { identifier.matches(it) }
+    @Suppress("UNCHECKED_CAST")
+    override fun <O : ModelObject<O>> getObject(identifier: ModelObjectIdentifier<O>): O? =
+        _objects.find { identifier.matches(it) } as O?
 
     override fun copy() =
         DefaultModel(

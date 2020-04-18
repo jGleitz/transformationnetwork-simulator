@@ -1,88 +1,129 @@
 package de.joshuagleitze.transformationnetwork.modeltransformation
 
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentity
+import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.LEFT
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.RIGHT
 
-interface ModelCorrespondences<in Tag : Any> {
-    fun addLeftToRightCorrespondence(
-        leftModelObject: ModelObjectIdentity,
-        rightModelObject: ModelObjectIdentity,
-        tag: Tag? = null
-    ) = addCorrespondence(LEFT, leftModelObject, rightModelObject, tag)
-
-    fun addLeftToRightCorrespondence(
-        leftModelObject: ModelObject,
-        rightModelObject: ModelObject,
-        tag: Tag? = null
-    ) = addCorrespondence(LEFT, leftModelObject, rightModelObject, tag)
-
-    fun addCorrespondence(
-        firstObjectSide: ModelTransformation.Side,
-        firstObject: ModelObjectIdentity,
-        secondObject: ModelObjectIdentity,
-        tag: Tag? = null
+interface ModelCorrespondences {
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> addLeftToRightCorrespondence(
+        leftModelObject: ModelObjectIdentity<Left>,
+        rightModelObject: ModelObjectIdentity<Right>,
+        tag: CorrespondenceTag<Left, Right>
     )
 
-    fun addCorrespondence(
-        firstObjectSide: ModelTransformation.Side,
-        firstObject: ModelObject,
-        secondObject: ModelObject,
-        tag: Tag? = null
-    ) = addCorrespondence(firstObjectSide, firstObject.identity, secondObject.identity, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> addLeftToRightCorrespondence(
+        leftModelObject: Left,
+        rightModelObject: Right,
+        tag: CorrespondenceTag<Left, Right>
+    ) = addLeftToRightCorrespondence(leftModelObject.identity, rightModelObject.identity, tag)
 
-    fun removeCorrespondence(rightOrLeftModelObject: ModelObjectIdentity, tag: Tag? = null)
-    fun removeCorrespondence(rightOrLeftModelObject: ModelObject, tag: Tag? = null) =
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> addLeftToLeftCorrespondence(
+        firstModelObject: ModelObjectIdentity<First>,
+        secondModelObject: ModelObjectIdentity<Second>,
+        tag: CorrespondenceTag<First, Second>
+    )
+
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> addLeftToLeftCorrespondence(
+        firstModelObject: First,
+        secondModelObject: Second,
+        tag: CorrespondenceTag<First, Second>
+    ) = addLeftToLeftCorrespondence(firstModelObject.identity, secondModelObject.identity, tag)
+
+
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> addRightToRightCorrespondence(
+        firstModelObject: ModelObjectIdentity<First>,
+        secondModelObject: ModelObjectIdentity<Second>,
+        tag: CorrespondenceTag<First, Second>
+    )
+
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> addRightToRightCorrespondence(
+        firstModelObject: First,
+        secondModelObject: Second,
+        tag: CorrespondenceTag<First, Second>
+    ) = addRightToRightCorrespondence(firstModelObject.identity, secondModelObject.identity, tag)
+
+    fun removeCorrespondence(rightOrLeftModelObject: ModelObjectIdentity<*>, tag: CorrespondenceTag<*, *>)
+    fun removeCorrespondence(rightOrLeftModelObject: ModelObject<*>, tag: CorrespondenceTag<*, *>) =
         removeCorrespondence(rightOrLeftModelObject.identity, tag)
 
     fun getCorrespondence(
-        modelObject: ModelObjectIdentity,
-        objectSide: ModelTransformation.Side,
-        tag: Tag? = null
-    ): ModelObjectIdentity?
-
-    fun requireCorrespondence(
-        modelObject: ModelObjectIdentity,
-        objectSide: ModelTransformation.Side,
-        tag: Tag? = null
-    ) = checkNotNull(getCorrespondence(modelObject, objectSide, tag))
-    { "Cannot find a correspondence for $modelObject in the ${objectSide.name} model!" }
+        identity: AnyModelObjectIdentity,
+        targetSide: ModelTransformation.Side,
+        tag: AnyCorrespondenceTag
+    ): AnyModelObject?
 
     fun getCorrespondence(
-        modelObject: ModelObject,
-        objectSide: ModelTransformation.Side,
-        tag: Tag? = null
-    ): ModelObject?
+        modelObject: AnyModelObject,
+        targetSide: ModelTransformation.Side,
+        tag: AnyCorrespondenceTag
+    ) = getCorrespondence(modelObject.identity, targetSide, tag)
 
-    fun requireCorrespondence(
-        modelObject: ModelObject,
-        objectSide: ModelTransformation.Side,
-        tag: Tag? = null
-    ) = checkNotNull(getCorrespondence(modelObject, objectSide, tag))
-    { "Cannot find a correspondence for $modelObject in the ${objectSide.name} model!" }
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> getRightCorrespondence(
+        leftModelObject: ModelObjectIdentity<Left>,
+        tag: CorrespondenceTag<Left, Right>
+    ): Right?
 
-    fun getRightCorrespondence(leftModelObject: ModelObjectIdentity, tag: Tag? = null) =
-        getCorrespondence(leftModelObject, LEFT, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> requireRightCorrespondence(
+        leftModelObject: ModelObjectIdentity<Left>,
+        tag: CorrespondenceTag<Left, Right>
+    ): Right
 
-    fun requireRightCorrespondence(leftModelObject: ModelObjectIdentity, tag: Tag? = null) =
-        requireCorrespondence(leftModelObject, LEFT, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> getRightCorrespondence(
+        leftModelObject: Left,
+        tag: CorrespondenceTag<Left, Right>
+    ) = getRightCorrespondence(leftModelObject.identity, tag)
 
-    fun getRightCorrespondence(leftModelObject: ModelObject, tag: Tag? = null) =
-        getCorrespondence(leftModelObject, LEFT, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> requireRightCorrespondence(
+        firstModelObject: Left,
+        tag: CorrespondenceTag<Left, Right>
+    ) = requireRightCorrespondence(firstModelObject.identity, tag)
 
-    fun requireRightCorrespondence(leftModelObject: ModelObject, tag: Tag? = null) =
-        requireCorrespondence(leftModelObject, LEFT, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> getLeftCorrespondence(
+        rightModelObject: ModelObjectIdentity<Right>,
+        tag: CorrespondenceTag<Left, Right>
+    ): Left?
 
-    fun getLeftCorrespondence(rightModelObject: ModelObjectIdentity, tag: Tag? = null) =
-        getCorrespondence(rightModelObject, RIGHT, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> requireLeftCorrespondence(
+        rightModelObject: ModelObjectIdentity<Right>,
+        tag: CorrespondenceTag<Left, Right>
+    ): Left
 
-    fun requireLeftCorrespondence(rightModelObject: ModelObjectIdentity, tag: Tag? = null) =
-        requireCorrespondence(rightModelObject, RIGHT, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> getLeftCorrespondence(
+        rightModelObject: Right,
+        tag: CorrespondenceTag<Left, Right>
+    ) = getLeftCorrespondence(rightModelObject.identity, tag)
 
-    fun getLeftCorrespondence(rightModelObject: ModelObject, tag: Tag? = null) =
-        getCorrespondence(rightModelObject, RIGHT, tag)
+    fun <Left : ModelObject<Left>, Right : ModelObject<Right>> requireLeftCorrespondence(
+        rightModelObject: Right,
+        tag: CorrespondenceTag<Left, Right>
+    ) = requireLeftCorrespondence(rightModelObject.identity, tag)
 
-    fun requireLeftCorrespondence(rightModelObject: ModelObject, tag: Tag? = null) =
-        requireCorrespondence(rightModelObject, RIGHT, tag)
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> getLeftSecondCorrespondence(
+        firstModelObject: ModelObjectIdentity<First>,
+        tag: CorrespondenceTag<First, Second>
+    ): Second?
+
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> requireLeftSecondCorrespondence(
+        firstModelObject: ModelObjectIdentity<First>,
+        tag: CorrespondenceTag<First, Second>
+    ): Second
+
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> getLeftSecondCorrespondence(
+        firstModelObject: First,
+        tag: CorrespondenceTag<First, Second>
+    ) = getLeftSecondCorrespondence(firstModelObject.identity, tag)
+
+    fun <First : ModelObject<First>, Second : ModelObject<Second>> requireLeftSecondCorrespondence(
+        firstModelObject: First,
+        tag: CorrespondenceTag<First, Second>
+    ) = requireLeftSecondCorrespondence(firstModelObject.identity, tag)
+
+
+    data class CorrespondenceTag<First : ModelObject<First>, Second : ModelObject<Second>>(
+        val leftClass: Metaclass<First>,
+        val rightClass: Metaclass<Second>
+    )
 }
+typealias AnyCorrespondenceTag = ModelCorrespondences.CorrespondenceTag<*, *>

@@ -11,14 +11,13 @@ fun buildPropagation(block: suspend PropagationScope.() -> Unit): Propagation =
 
 fun executeTransformation(
     transformation: ObservableModelTransformation,
-    leftChanges: ChangeSet,
-    rightChanges: ChangeSet
+    changes: ChangeSet
 ): ChangeSet {
-    val leftModel = transformation.leftModel
-    val rightModel = transformation.rightModel
+    val leftChanges = changes.filterByModel(transformation.leftModel)
+    val rightChanges = changes.filterByModel(transformation.rightModel)
     lateinit var rightResultChanges: ChangeSet
-    val leftResultChanges = leftModel.recordChanges {
-        rightResultChanges = rightModel.recordChanges {
+    val leftResultChanges = transformation.leftModel.recordChanges {
+        rightResultChanges = transformation.rightModel.recordChanges {
             transformation.processChanges(leftChanges, rightChanges)
         }
     }

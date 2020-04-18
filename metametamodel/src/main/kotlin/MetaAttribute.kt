@@ -1,5 +1,7 @@
 package de.joshuagleitze.transformationnetwork.metametamodel
 
+typealias AnyMetaAttribute = MetaAttribute<*>
+
 interface MetaAttribute<T : Any> {
     val name: String
 

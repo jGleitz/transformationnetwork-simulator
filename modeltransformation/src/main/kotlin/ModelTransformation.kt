@@ -9,6 +9,7 @@ interface ModelTransformation {
     val models: TransformationModels
     val type: ModelTransformationType
 
+    fun isConsistent(): Boolean
     fun processChanges(leftChanges: ChangeSet, rightChanges: ChangeSet)
 
     enum class Side {
