@@ -1,7 +1,9 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 dependencies {
-    implementation(name = "kotlin-react-dom", version = "16.13.0-pre.94-kotlin-1.3.70", group = "org.jetbrains")
+    val kotlinReactVersion = "16.13.0-pre.97-kotlin-1.3.72"
+    implementation(name = "kotlin-react", version = kotlinReactVersion, group = "org.jetbrains")
+    implementation(name = "kotlin-react-dom", version = kotlinReactVersion, group = "org.jetbrains")
     val kotlinCssVersion = "1.0.0-pre.97-kotlin-1.3.72"
     implementation(name = "kotlin-styled", version = kotlinCssVersion, group = "org.jetbrains")
     implementation(name = "kotlin-css-js", version = kotlinCssVersion, group = "org.jetbrains")

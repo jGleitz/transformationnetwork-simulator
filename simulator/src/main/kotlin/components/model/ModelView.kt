@@ -1,9 +1,9 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.model
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
-import de.joshuagleitze.transformationnetwork.changemetamodel.ModelObjectChange
-import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentifier
-import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
+import de.joshuagleitze.transformationnetwork.changemetamodel.AnyModelObjectChange
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentifier
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.simulator.components.arrow.ArrowTarget
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.time
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.PositionedModel
@@ -38,7 +38,6 @@ import kotlinx.css.px
 import kotlinx.css.textAlign
 import kotlinx.css.width
 import org.w3c.dom.HTMLElement
-import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RComponent
 import react.RContext
@@ -95,8 +94,8 @@ interface ModelViewProps : RProps {
 private interface ModelViewComponentState : RState {
     var containerRef: RReadableRef<HTMLElement>
     var lastModelAdditionTime: Int
-    var lastAddedModels: MutableSet<ModelObjectIdentity>
-    var highlightedObject: ModelObjectIdentifier?
+    var lastAddedModels: MutableSet<AnyModelObjectIdentity>
+    var highlightedObject: AnyModelObjectIdentifier?
 }
 
 private interface ModelViewComponentProps : RProps, ModelViewProps {
@@ -158,7 +157,7 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
         }
     }
 
-    private val onModelChange = { change: ModelObjectChange ->
+    private val onModelChange = { change: AnyModelObjectChange ->
         if (change is AdditionChange) {
             val currentList = if (state.lastModelAdditionTime < currentTime) HashSet() else state.lastAddedModels
             currentList.add(change.addedObjectIdentity)
@@ -170,7 +169,7 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
         }
     }
 
-    private fun highlightObject(identifier: ModelObjectIdentifier?) {
+    private fun highlightObject(identifier: AnyModelObjectIdentifier?) {
         if (state.highlightedObject != identifier) setState { highlightedObject = identifier }
     }
 

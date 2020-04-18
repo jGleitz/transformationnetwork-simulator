@@ -1,11 +1,9 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.simulator
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
 import de.joshuagleitze.transformationnetwork.network.Propagation
 import de.joshuagleitze.transformationnetwork.network.PropagationStrategy
 import de.joshuagleitze.transformationnetwork.network.TransformationNetwork
-import de.joshuagleitze.transformationnetwork.publishsubscribe.PublishingObservable
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.horizontalControlPadding
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.verticalControlPadding
@@ -145,7 +143,6 @@ private class SimulationControl : RComponent<SimulationControlProps, SimulationC
             }
         }
     }
-
 
     private fun RDOMBuilder<HTMLTag>.visibleIf(condition: Boolean) {
         attrs.jsStyle["visibility"] = if (condition) "visible" else "hidden"

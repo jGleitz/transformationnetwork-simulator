@@ -1,9 +1,9 @@
 package de.joshuagleitze.transformationnetwork.simulator.components.model
 
-import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeSetChange
-import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModelObject
+import de.joshuagleitze.transformationnetwork.changemetamodel.AnyAttributeSetChange
+import de.joshuagleitze.transformationnetwork.changerecording.AnyChangeRecordingModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentifier
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
-import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentifier
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.time
 import de.joshuagleitze.transformationnetwork.simulator.styles.Colors
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
@@ -203,10 +203,10 @@ private object ModelObjectStyles : StyleSheet("ModelObject") {
 }
 
 interface ModelObjectViewProps : RProps {
-    var modelObject: ChangeRecordingModelObject
+    var modelObject: AnyChangeRecordingModelObject
     var addedTime: Int?
     var highlighted: Boolean
-    var highlighter: (ModelObjectIdentifier?) -> Unit
+    var highlighter: (AnyModelObjectIdentifier?) -> Unit
 }
 
 private interface ModelObjectViewState : RState {
@@ -269,7 +269,7 @@ private class ModelObjectView : RComponent<ModelObjectViewProps, ModelObjectView
         }
     }
 
-    private val onAttributeChange = { change: AttributeSetChange<*> ->
+    private val onAttributeChange = { change: AnyAttributeSetChange ->
         var previous = state.lastUpdatedAttributes
         if (state.lastUpdate != currentTime) {
             previous = emptyList()
@@ -315,13 +315,13 @@ private class ModelObjectView : RComponent<ModelObjectViewProps, ModelObjectView
         when (value) {
             null -> nullValue()
             is List<*> -> listValue(value)
-            is ModelObjectIdentifier -> referenceValue(value)
+            is AnyModelObjectIdentifier -> referenceValue(value)
             is Date -> span { +value.toLocaleDateString() }
             else -> span { +value.toString() }
         }
     }
 
-    private fun RBuilder.referenceValue(value: ModelObjectIdentifier) {
+    private fun RBuilder.referenceValue(value: AnyModelObjectIdentifier) {
         styledSpan {
             css { +ModelObjectStyles.referenceValue }
             attrs.onMouseOverFunction = { props.highlighter(value) }
@@ -366,10 +366,10 @@ private class ModelObjectView : RComponent<ModelObjectViewProps, ModelObjectView
 }
 
 fun RBuilder.ModelObjectView(
-    modelObject: ChangeRecordingModelObject,
+    modelObject: AnyChangeRecordingModelObject,
     addedTime: Int?,
     highlighted: Boolean = false,
-    highlighter: (ModelObjectIdentifier?) -> Unit = {},
+    highlighter: (AnyModelObjectIdentifier?) -> Unit = {},
     handler: RHandler<ModelObjectViewProps> = {}
 ) = child(ModelObjectView::class) {
     attrs.modelObject = modelObject

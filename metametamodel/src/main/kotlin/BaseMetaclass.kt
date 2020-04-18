@@ -1,6 +1,6 @@
 package de.joshuagleitze.transformationnetwork.metametamodel
 
-abstract class BaseMetaclass : Metaclass {
+abstract class BaseMetaclass<O : ModelObject<O>> : Metaclass<O> {
     final override val attributes: Set<MetaAttribute<*>>
         get() {
             val attributesByName = HashMap<String, MetaAttribute<*>>()
