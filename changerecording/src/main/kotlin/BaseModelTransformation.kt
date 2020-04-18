@@ -1,23 +1,28 @@
 package de.joshuagleitze.transformationnetwork.changerecording
 
+import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.byIdentity
+import de.joshuagleitze.transformationnetwork.modeltransformation.AnyCorrespondenceTag
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelCorrespondences
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
+import de.joshuagleitze.transformationnetwork.modeltransformation.ModelCorrespondences.CorrespondenceTag
+import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.LEFT
 import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation.Side.RIGHT
 import de.joshuagleitze.transformationnetwork.publishsubscribe.Observable
 import de.joshuagleitze.transformationnetwork.publishsubscribe.PublishingObservable
 
-abstract class BaseModelTransformation<in Tag : Any> : ObservableModelTransformation {
+abstract class BaseModelTransformation : ObservableModelTransformation {
     private val _execution = PublishingObservable<Unit>()
     override val execution: Observable<Unit> get() = _execution
-    protected val correspondences: ModelCorrespondences<Tag> = Correspondences()
+    protected val correspondences: ModelCorrespondences = Correspondences()
     override val models: ObservableModelTransformation.TransformationModels = DefaultTransformationModels()
 
     protected abstract fun processChangesChecked(leftSide: TransformationSide, rightSide: TransformationSide)
@@ -34,108 +39,189 @@ abstract class BaseModelTransformation<in Tag : Any> : ObservableModelTransforma
     }
 
     private inner class DefaultTransformationModels : ObservableModelTransformation.TransformationModels {
-        override fun get(side: ModelTransformation.Side) = when (side) {
+        override fun get(side: Side) = when (side) {
             LEFT -> leftModel
             RIGHT -> rightModel
         }
     }
 
-    protected inline fun Iterable<AttributeChange>.executeFiltered(
-        metaclass: Metaclass,
-        function: (AttributeChange) -> Unit
-    ) {
-        this.filter { it.targetObject.metaclass == metaclass }.forEach(function)
-    }
+    protected fun TransformationSide.propagateDeletionsToOtherSide(vararg tags: AnyCorrespondenceTag) =
+        propagateDeletionsToSide(side.opposite, *tags)
 
-    protected fun TransformationSide.propagateDeletionsToOtherSide() {
-        deletions.forEach { deletion ->
-            val deletedObject = thisSideModel.requireObject(deletion.deletedObject)
-            getOtherSideCorrespondence(deletedObject)?.let { otherSideObject ->
-                otherSideModel -= otherSideObject
-                correspondences.removeCorrespondence(deletedObject)
+    protected fun TransformationSide.propagateDeletionsOnThisSide(vararg tags: AnyCorrespondenceTag) =
+        propagateDeletionsToSide(side, *tags)
+
+    private fun TransformationSide.propagateDeletionsToSide(side: Side, vararg tags: AnyCorrespondenceTag) {
+        tags.forEach { tag ->
+            deletions.forEach { deletion ->
+                val deletedObject = thisSideModel.requireObject(deletion.deletedObject)
+                correspondences.getCorrespondence(deletedObject, side, tag)?.let { otherSideObject ->
+                    otherSideModel -= otherSideObject
+                    correspondences.removeCorrespondence(deletedObject, tag)
+                }
             }
         }
     }
 
-    protected fun getFromModel(
-        side: ModelTransformation.Side,
-        modelObjectIdentity: ModelObjectIdentity
-    ): ModelObject =
-        checkNotNull(models[side].objects.find { modelObjectIdentity.identifies(it) }) { "The $side model '${models[side]}' does not contain the object '$modelObjectIdentity'!" }
+    @Suppress("UNCHECKED_CAST")
+    fun <O : ModelObject<O>> Iterable<AttributeChange<*>>.targetting(metaclass: Metaclass<O>) =
+        this.mapNotNull { it.takeIf { it.targetObject.metaclass == metaclass } as AttributeChange<O>? }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <O : ModelObject<O>> Iterable<AdditionChange<*>>.adding(metaclass: Metaclass<O>) =
+        this.mapNotNull { it.takeIf { it.addedObjectClass == metaclass } as AdditionChange<O>? }
+
+    @Suppress("UNCHECKED_CAST")
+    protected fun <O : ModelObject<O>> getFromModel(
+        side: Side,
+        modelObjectIdentity: ModelObjectIdentity<O>
+    ): O = checkNotNull(models[side].objects.find { modelObjectIdentity.identifies(it) }) {
+        "The $side model '${models[side]}' does not contain the object '$modelObjectIdentity'!"
+    } as O
 
     override fun toString() = "${this::class.simpleName}[$leftModel <-> $rightModel]"
 
-    private inner class Correspondences :
-        ModelCorrespondences<Tag> {
-        private val leftToRight: MutableMap<Pair<ModelObjectIdentity, Tag?>, ModelObjectIdentity> = HashMap()
-        private val rightToLeft: MutableMap<Pair<ModelObjectIdentity, Tag?>, ModelObjectIdentity> = HashMap()
+    private inner class Correspondences : ModelCorrespondences {
+        private val leftToLeft: MutableMap<Pair<AnyModelObjectIdentity, AnyCorrespondenceTag>, AnyModelObjectIdentity> =
+            HashMap()
+        private val rightToRight: MutableMap<Pair<AnyModelObjectIdentity, AnyCorrespondenceTag>, AnyModelObjectIdentity> =
+            HashMap()
 
-        override fun addCorrespondence(
-            firstObjectSide: ModelTransformation.Side,
-            firstObject: ModelObjectIdentity,
-            secondObject: ModelObjectIdentity,
-            tag: Tag?
+        private val leftToRight: MutableMap<Pair<AnyModelObjectIdentity, AnyCorrespondenceTag>, AnyModelObjectIdentity> =
+            HashMap()
+        private val rightToLeft: MutableMap<Pair<AnyModelObjectIdentity, AnyCorrespondenceTag>, AnyModelObjectIdentity> =
+            HashMap()
+
+        private fun addOppositeCorrespondence(
+            firstObjectSide: Side,
+            firstObject: AnyModelObjectIdentity,
+            secondObject: AnyModelObjectIdentity,
+            tag: AnyCorrespondenceTag
         ) {
-            // TODO
-            //getFromModel(firstObjectSide, firstObject)
-            //getFromModel(firstObjectSide.opposite, secondObject)
-            getToOtherSideMap(firstObjectSide)[firstObject to tag] = secondObject
-            getToOtherSideMap(firstObjectSide.opposite)[secondObject to tag] = firstObject
+            getFromModel(firstObjectSide, firstObject)
+            getFromModel(firstObjectSide.opposite, secondObject)
+            getFromOtherSideMap(firstObjectSide.opposite)[firstObject to tag] = secondObject
+            getFromOtherSideMap(firstObjectSide)[secondObject to tag] = firstObject
         }
 
-        override fun removeCorrespondence(rightOrLeftModelObject: ModelObjectIdentity, tag: Tag?) {
+        private fun addSameSideCorrespondence(
+            side: Side,
+            firstObject: AnyModelObjectIdentity,
+            secondObject: AnyModelObjectIdentity,
+            tag: AnyCorrespondenceTag
+        ) {
+            getFromModel(side, firstObject)
+            getFromModel(side, secondObject)
+            getSameSideMap(side)[firstObject to tag] = secondObject
+            getSameSideMap(side)[secondObject to tag] = firstObject
+        }
+
+        override fun removeCorrespondence(rightOrLeftModelObject: AnyModelObjectIdentity, tag: AnyCorrespondenceTag) {
             val modelSide = findModelSide(rightOrLeftModelObject)
-            val currentlyAssociated = getToOtherSideMap(modelSide).remove(rightOrLeftModelObject to tag)
+            val currentlyAssociated = getFromOtherSideMap(modelSide.opposite).remove(rightOrLeftModelObject to tag)
             checkNotNull(currentlyAssociated) { "$rightOrLeftModelObject is not currently associated with any object!" }
-            getToOtherSideMap(modelSide.opposite) -= currentlyAssociated to tag
+            getFromOtherSideMap(modelSide) -= currentlyAssociated to tag
         }
 
-        private fun findModelSide(modelObject: ModelObjectIdentity) = when {
-            leftModel.containsObject(byIdentity(modelObject)) -> LEFT
-            rightModel.containsObject(byIdentity(modelObject)) -> RIGHT
-            else -> throw AssertionError("'$modelObject' is neither in the left nor right model!")
-        }
-
-        override fun getCorrespondence(
-            modelObject: ModelObjectIdentity,
-            objectSide: ModelTransformation.Side,
-            tag: Tag?
-        ): ModelObjectIdentity? {
-            // TODO
-            //getFromModel(objectSide, modelObject)
-            return getToOtherSideMap(objectSide)[modelObject to tag]
+        private fun findModelSide(identity: AnyModelObjectIdentity) = when {
+            leftModel.containsObject(byIdentity(identity)) -> LEFT
+            rightModel.containsObject(byIdentity(identity)) -> RIGHT
+            else -> throw AssertionError("'$identity' is neither in the left nor right model!")
         }
 
         override fun getCorrespondence(
-            modelObject: ModelObject,
-            objectSide: ModelTransformation.Side,
-            tag: Tag?
-        ): ModelObject? {
-            val correspondenceIdentity = getCorrespondence(modelObject.identity, objectSide, tag)
-            return if (correspondenceIdentity != null) getFromModel(objectSide.opposite, correspondenceIdentity)
+            identity: AnyModelObjectIdentity,
+            targetSide: Side,
+            tag: AnyCorrespondenceTag
+        ): AnyModelObject? {
+            val correspondenceIdentity =
+                getFromOtherSideMap(targetSide)[identity to tag] ?: getSameSideMap(targetSide)[identity to tag]
+            return if (correspondenceIdentity != null) getFromModel(targetSide, correspondenceIdentity)
             else null
         }
 
-        private fun getToOtherSideMap(side: ModelTransformation.Side) = when (side) {
-            LEFT -> leftToRight
-            RIGHT -> rightToLeft
+        private fun requireCorrespondence(
+            modelObject: AnyModelObjectIdentity,
+            targetSide: Side,
+            tag: AnyCorrespondenceTag
+        ) = checkNotNull(getCorrespondence(modelObject, targetSide, tag)) {
+            "Cannot find a correspondence for $modelObject in the ${targetSide.name} model!"
+        }
+
+        override fun <Left : ModelObject<Left>, Right : ModelObject<Right>> addLeftToRightCorrespondence(
+            leftModelObject: ModelObjectIdentity<Left>,
+            rightModelObject: ModelObjectIdentity<Right>,
+            tag: CorrespondenceTag<Left, Right>
+        ) = addOppositeCorrespondence(LEFT, leftModelObject, rightModelObject, tag)
+
+        override fun <First : ModelObject<First>, Second : ModelObject<Second>> addLeftToLeftCorrespondence(
+            firstModelObject: ModelObjectIdentity<First>,
+            secondModelObject: ModelObjectIdentity<Second>,
+            tag: CorrespondenceTag<First, Second>
+        ) = addSameSideCorrespondence(LEFT, firstModelObject, secondModelObject, tag)
+
+        override fun <First : ModelObject<First>, Second : ModelObject<Second>> addRightToRightCorrespondence(
+            firstModelObject: ModelObjectIdentity<First>,
+            secondModelObject: ModelObjectIdentity<Second>,
+            tag: CorrespondenceTag<First, Second>
+        ) = addSameSideCorrespondence(RIGHT, firstModelObject, secondModelObject, tag)
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <Left : ModelObject<Left>, Right : ModelObject<Right>> getRightCorrespondence(
+            leftModelObject: ModelObjectIdentity<Left>,
+            tag: CorrespondenceTag<Left, Right>
+        ) = getCorrespondence(leftModelObject, RIGHT, tag) as Right?
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <Left : ModelObject<Left>, Right : ModelObject<Right>> requireRightCorrespondence(
+            leftModelObject: ModelObjectIdentity<Left>,
+            tag: CorrespondenceTag<Left, Right>
+        ) = requireCorrespondence(leftModelObject, RIGHT, tag) as Right
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <Left : ModelObject<Left>, Right : ModelObject<Right>> getLeftCorrespondence(
+            rightModelObject: ModelObjectIdentity<Right>,
+            tag: CorrespondenceTag<Left, Right>
+        ) = getCorrespondence(rightModelObject, LEFT, tag) as Left?
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <Left : ModelObject<Left>, Right : ModelObject<Right>> requireLeftCorrespondence(
+            rightModelObject: ModelObjectIdentity<Right>,
+            tag: CorrespondenceTag<Left, Right>
+        ) = requireCorrespondence(rightModelObject, LEFT, tag) as Left
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <First : ModelObject<First>, Second : ModelObject<Second>> getLeftSecondCorrespondence(
+            firstModelObject: ModelObjectIdentity<First>,
+            tag: CorrespondenceTag<First, Second>
+        ) = getCorrespondence(firstModelObject, LEFT, tag) as Second?
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <First : ModelObject<First>, Second : ModelObject<Second>> requireLeftSecondCorrespondence(
+            firstModelObject: ModelObjectIdentity<First>,
+            tag: CorrespondenceTag<First, Second>
+        ) = requireCorrespondence(firstModelObject, LEFT, tag) as Second
+
+        private fun getFromOtherSideMap(side: Side) = when (side) {
+            LEFT -> rightToLeft
+            RIGHT -> leftToRight
+        }
+
+        private fun getSameSideMap(side: Side) = when (side) {
+            LEFT -> leftToLeft
+            RIGHT -> rightToRight
         }
     }
 
-    protected inner class TransformationSide(val side: ModelTransformation.Side, val changes: ChangeSet) :
+    protected inner class TransformationSide(val side: Side, val changes: ChangeSet) :
         ChangeSet by changes {
         val thisSideModel get() = models[side]
         val otherSideModel get() = models[side.opposite]
-
-        fun getOtherSideCorrespondence(modelObject: ModelObject): ModelObject? {
-            val correspondenceIdentity = correspondences.getCorrespondence(modelObject.identity, side)
-            return if (correspondenceIdentity != null) otherSideModel.requireObject(byIdentity(correspondenceIdentity)) else null
-        }
     }
 
-    protected inline fun <T : Any> ModelObject.changeIfNot(
+    protected inline fun <O : ModelObject<O>, T : Any> O.changeIfNot(
         metaAttribute: MetaAttribute<T>,
-        vararg assignments: AttributeAssignment<*>,
+        vararg assignments: AttributeAssignment<O, *>,
         valueProvider: () -> T?
     ) {
         if (assignments.any { !it.holdsWith(this) }) {
@@ -143,16 +229,13 @@ abstract class BaseModelTransformation<in Tag : Any> : ObservableModelTransforma
         }
     }
 
-    protected class AttributeAssignment<in Target>(
+    protected class AttributeAssignment<O : ModelObject<*>, in Target>(
         private val value: Target,
-        private val transformation: (ModelObject) -> Target
+        private val transformation: (O) -> Target
     ) {
-        fun holdsWith(sourceObject: ModelObject) = value == transformation(sourceObject)
+        fun holdsWith(sourceObject: O) = value == transformation(sourceObject)
     }
 
-    protected infix fun <Target> Target.isEqualTo(valueSource: (ModelObject) -> Target) =
-        AttributeAssignment(
-            this,
-            valueSource
-        )
+    protected infix fun <O : ModelObject<O>, Target> Target.isEqualTo(valueSource: (O) -> Target) =
+        AttributeAssignment(this, valueSource)
 }

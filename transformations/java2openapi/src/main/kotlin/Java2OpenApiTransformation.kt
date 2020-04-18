@@ -1,82 +1,87 @@
 package de.joshuagleitze.transformationnetwork.transformations
 
+import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformation
 import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformationType
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
 import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformationType
-import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.byIdentity
+import de.joshuagleitze.transformationnetwork.metametamodel.ofType
 import de.joshuagleitze.transformationnetwork.models.java.Class
 import de.joshuagleitze.transformationnetwork.models.java.Interface
 import de.joshuagleitze.transformationnetwork.models.java.JavaMetamodel
 import de.joshuagleitze.transformationnetwork.models.java.Method
 import de.joshuagleitze.transformationnetwork.models.openapi.Endpoint
 import de.joshuagleitze.transformationnetwork.models.openapi.OpenApiMetamodel
-import de.joshuagleitze.transformationnetwork.transformations.Java2OpenApiTransformation.Tag
-import de.joshuagleitze.transformationnetwork.transformations.Java2OpenApiTransformation.Tag.IMPLEMENTATION
-import de.joshuagleitze.transformationnetwork.transformations.Java2OpenApiTransformation.Tag.INTERFACE_METHOD
+import de.joshuagleitze.transformationnetwork.modeltransformation.ModelCorrespondences.CorrespondenceTag
 
 class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openApiModel: ChangeRecordingModel) :
-    BaseModelTransformation<Tag>() {
+    BaseModelTransformation() {
     override val type: ObservableModelTransformationType get() = Type
     override val leftModel: ChangeRecordingModel get() = javaModel
     override val rightModel: ChangeRecordingModel get() = openApiModel
 
+    override fun isConsistent(): Boolean {
+        return javaModel.objects.ofType(Interface.Metaclass).all { iface ->
+            val implementation = correspondences.getLeftSecondCorrespondence(iface, IMPLEMENTATION)
+            implementation != null && (iface.methods?.all { methodIdentifier ->
+                val method = javaModel.requireObject(methodIdentifier)
+                val endpoint = correspondences.getRightCorrespondence(method, METHOD_ENDPOINT)
+                val classMethod = correspondences.getLeftSecondCorrespondence(method, METHOD_IMPLEMENTATION)
+                endpoint != null
+                        && endpoint.path == getEndpointPath(method)
+                        && endpoint.method == getEndpointMethod(method)
+                        && classMethod != null
+                        && classMethod.name == method.name
+                        && classMethod.parameters == method.parameters
+                        && classMethod.visibility == method.visibility
+                        && (classMethod.modifiers?.contains("override") ?: false)
+            } ?: true)
+        }
+    }
+
     override fun processChangesChecked(leftSide: TransformationSide, rightSide: TransformationSide) {
-        leftSide.propagateDeletionsToOtherSide()
-        rightSide.propagateDeletionsToOtherSide()
-        leftSide.processJavaAdditions()
-        rightSide.processOpenApiAdditions()
-        leftSide.modifications.executeFiltered(Interface.Metaclass, ::processInterfaceModification)
-        leftSide.modifications.executeFiltered(Method.Metaclass, ::processMethodModification)
+        leftSide.propagateDeletionsToOtherSide(METHOD_ENDPOINT)
+        leftSide.propagateDeletionsOnThisSide(IMPLEMENTATION, METHOD_IMPLEMENTATION)
+        rightSide.propagateDeletionsToOtherSide(METHOD_ENDPOINT)
+        rightSide.propagateDeletionsOnThisSide(IMPLEMENTATION, METHOD_IMPLEMENTATION)
+
+        leftSide.additions.adding(Interface.Metaclass).forEach(::processJavaInterfaceAddition)
+        leftSide.modifications.targetting(Interface.Metaclass).forEach(::processInterfaceModification)
+        leftSide.modifications.targetting(Method.Metaclass).forEach(::processMethodModification)
     }
 
-    private fun TransformationSide.processJavaAdditions() {
-        for (addition in additions) {
-            when (addition.addedObjectClass) {
-                Interface.Metaclass -> {
-                    val implementation = Class()
-                    javaModel += implementation
-                    correspondences.addLeftToRightCorrespondence(
-                        addition.addedObjectIdentity,
-                        implementation.identity,
-                        IMPLEMENTATION
-                    )
-                    implementation.implements = byIdentity(addition.addedObjectIdentity)
-                }
-            }
-        }
+    private fun processJavaInterfaceAddition(addition: AdditionChange<Interface>) {
+        val implementation = Class()
+        implementation.implements = byIdentity(addition.addedObjectIdentity)
+        javaModel += implementation
+        correspondences.addLeftToLeftCorrespondence(
+            addition.addedObjectIdentity,
+            implementation.identity,
+            IMPLEMENTATION
+        )
     }
 
-    private fun TransformationSide.processOpenApiAdditions() {
-        for (addition in additions) {
-            check(addition.addedObjectClass == Endpoint.Metaclass) { "wtf?" }
-
-        }
-    }
-
-    private fun processInterfaceModification(modification: AttributeChange) {
+    private fun processInterfaceModification(modification: AttributeChange<Interface>) {
         val javaInterface = javaModel.requireObject(modification.targetObject)
-        val implementation = javaModel.requireObject(
-            byIdentity(correspondences.requireRightCorrespondence(javaInterface.identity, IMPLEMENTATION))
-        ) as Class
+        val implementation = correspondences.requireLeftSecondCorrespondence(javaInterface.identity, IMPLEMENTATION)
         with(Interface.Metaclass.Attributes) {
             when (modification.targetAttribute) {
-                name -> implementation.name = javaInterface[name]?.replace("Service", "Server")
+                name -> implementation.name = javaInterface.name?.replace("Service", "Server")
                 methods -> {// TODO deletion
-                    javaInterface[methods]?.forEach { interfaceMethodIdentifier ->
-                        val interfaceMethod = javaModel.requireObject(interfaceMethodIdentifier) as Method
+                    javaInterface.methods?.forEach { interfaceMethodIdentifier ->
+                        val interfaceMethod = javaModel.requireObject(interfaceMethodIdentifier)
                         val correspondingEndpoint =
-                            correspondences.getRightCorrespondence(interfaceMethod, INTERFACE_METHOD) as Endpoint?
+                            correspondences.getRightCorrespondence(interfaceMethod, METHOD_ENDPOINT)
                         if (correspondingEndpoint == null) createEndpointForMethod(interfaceMethod)
                     }
-                    implementation.methods = javaInterface[methods]?.map { interfaceMethodIdentifier ->
-                        val interfaceMethod = javaModel.requireObject(interfaceMethodIdentifier) as Method
+                    implementation.methods = javaInterface.methods?.map { interfaceMethodIdentifier ->
+                        val interfaceMethod = javaModel.requireObject(interfaceMethodIdentifier)
                         byIdentity(
-                            correspondences.getRightCorrespondence(interfaceMethod.identity, IMPLEMENTATION)
-                                ?: createImplementationForMethod(interfaceMethod).identity
+                            (correspondences.getLeftSecondCorrespondence(interfaceMethod, METHOD_IMPLEMENTATION)
+                                ?: createImplementationForMethod(interfaceMethod)).identity
                         )
                     }
                 }
@@ -91,7 +96,7 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
             path = getEndpointPath(javaMethod)
         }
         openApiModel += endpoint
-        correspondences.addLeftToRightCorrespondence(javaMethod, endpoint, INTERFACE_METHOD)
+        correspondences.addLeftToRightCorrespondence(javaMethod, endpoint, METHOD_ENDPOINT)
         return endpoint
     }
 
@@ -103,16 +108,15 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
             modifiers = listOf("override")
         }
         javaModel += implementation
-        correspondences.addLeftToRightCorrespondence(interfaceMethod, implementation, IMPLEMENTATION)
+        correspondences.addLeftToLeftCorrespondence(interfaceMethod, implementation, METHOD_IMPLEMENTATION)
         return implementation
     }
 
-    private fun processMethodModification(modification: AttributeChange) {
+    private fun processMethodModification(modification: AttributeChange<Method>) {
         val javaMethod = javaModel.requireObject(modification.targetObject)
 
-        val endpoint = correspondences.getRightCorrespondence(javaMethod, INTERFACE_METHOD) as Endpoint?
-        val implementation = correspondences.getRightCorrespondence(javaMethod.identity, IMPLEMENTATION)
-            ?.let { javaModel.requireObject(byIdentity(it)) } as Method?
+        val endpoint = correspondences.getRightCorrespondence(javaMethod, METHOD_ENDPOINT)
+        val implementation = correspondences.getLeftSecondCorrespondence(javaMethod.identity, METHOD_IMPLEMENTATION)
 
         with(Method.Metaclass.Attributes) {
             when (modification.targetAttribute) {
@@ -129,7 +133,7 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
                         if (javaMethod[visiblity] != "public") {
                             if (endpoint != null) {
                                 openApiModel -= endpoint
-                                correspondences.removeCorrespondence(endpoint)
+                                correspondences.removeCorrespondence(endpoint, METHOD_ENDPOINT)
                             }
                         }
                     }
@@ -140,7 +144,7 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
         }
     }
 
-    private fun getEndpointPath(javaMethod: ModelObject): String? {
+    private fun getEndpointPath(javaMethod: Method): String? {
         with(Method.Metaclass.Attributes) {
             val methodName = javaMethod[name]
             return if (methodName == null) null
@@ -152,7 +156,7 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
         }
     }
 
-    private fun getEndpointMethod(javaMethod: ModelObject): String? {
+    private fun getEndpointMethod(javaMethod: Method): String? {
         with(Method.Metaclass.Attributes) {
             val parameters = javaMethod[parameters]
             return when {
@@ -171,9 +175,9 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
             leftModel: ChangeRecordingModel,
             rightModel: ChangeRecordingModel
         ) = Java2OpenApiTransformation(leftModel, rightModel)
-    }
 
-    enum class Tag {
-        INTERFACE, INTERFACE_METHOD, IMPLEMENTATION
+        private val IMPLEMENTATION = CorrespondenceTag(Interface.Metaclass, Class.Metaclass)
+        private val METHOD_IMPLEMENTATION = CorrespondenceTag(Method.Metaclass, Method.Metaclass)
+        private val METHOD_ENDPOINT = CorrespondenceTag(Method.Metaclass, Endpoint.Metaclass)
     }
 }

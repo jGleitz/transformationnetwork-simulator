@@ -11,11 +11,18 @@ class DefaultAdditiveChangeSet private constructor(
     private val _modelChangeSets: MutableMap<ModelIdentity, ModelSpecificAdditiveChangeSet>
 ) : AdditiveChangeSet {
     constructor() : this(HashMap())
+    constructor(changes: ChangeSet) : this() {
+        addAll(changes)
+    }
+
+    constructor(changes: Collection<ModelChange>) : this() {
+        addAll(changes)
+    }
 
     override val affectedModels: Set<ModelIdentity> get() = _modelChangeSets.values.flatMapTo(HashSet()) { it.affectedModels }
-    override val additions: Collection<AdditionChange> get() = _modelChangeSets.values.flatMap { it.additions }
-    override val deletions: Collection<DeletionChange> get() = _modelChangeSets.values.flatMap { it.deletions }
-    override val modifications: Collection<AttributeChange> get() = _modelChangeSets.values.flatMap { it.modifications }
+    override val additions: Collection<AdditionChange<*>> get() = _modelChangeSets.values.flatMap { it.additions }
+    override val deletions: Collection<DeletionChange<*>> get() = _modelChangeSets.values.flatMap { it.deletions }
+    override val modifications: Collection<AttributeChange<*>> get() = _modelChangeSets.values.flatMap { it.modifications }
     override val size: Int get() = _modelChangeSets.values.sumBy { it.size }
 
     override fun add(change: ModelChange) = _modelChangeSets
@@ -62,16 +69,17 @@ class DefaultAdditiveChangeSet private constructor(
     override fun toString() = standardToString()
 }
 
-fun changeSetOf(vararg changes: ModelChange): ChangeSet =
-    DefaultAdditiveChangeSet().also { it.addAll(changes.toList()) }
+fun changeSetOf(vararg changes: ModelChange): ChangeSet = DefaultAdditiveChangeSet(changes.toList())
 
 fun changeSetOf(vararg changes: ChangeSet): ChangeSet =
-    DefaultAdditiveChangeSet().also { changes.forEach { set -> it.addAll(set) } }
+    DefaultAdditiveChangeSet().also { result ->
+        changes.forEach { set -> result.addAll(set) }
+    }
 
 operator fun ChangeSet.plus(other: ChangeSet): AdditiveChangeSet {
     val result =
         if (this is DefaultAdditiveChangeSet) this.copy()
-        else DefaultAdditiveChangeSet().also { it += this }
+        else DefaultAdditiveChangeSet(this)
     result += other
     return result
 }

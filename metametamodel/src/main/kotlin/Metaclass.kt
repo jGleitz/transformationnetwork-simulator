@@ -1,9 +1,12 @@
 package de.joshuagleitze.transformationnetwork.metametamodel
 
-interface Metaclass {
+typealias AnyMetaclass = Metaclass<*>
+
+interface Metaclass<O : ModelObject<O>> {
     val name: String
-    val attributes: Set<MetaAttribute<*>>
-    val ownAttributes: Set<MetaAttribute<*>>
-    val superClasses: Set<Metaclass>
-    fun createNew(identity: ModelObjectIdentity? = null): ModelObject
+    val attributes: Set<AnyMetaAttribute>
+    val ownAttributes: Set<AnyMetaAttribute>
+    val superClasses: Set<AnyMetaclass>
+
+    fun createNew(identity: AnyModelObjectIdentity? = null): O
 }

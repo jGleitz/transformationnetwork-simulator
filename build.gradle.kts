@@ -33,7 +33,10 @@ subprojects {
         target {
             browser()
             compilations.all {
-                compileKotlinTask.kotlinOptions.moduleKind = "commonjs"
+                compileKotlinTask.kotlinOptions {
+                    moduleKind = "commonjs"
+                    freeCompilerArgs += "-XXLanguage:+NewInference"
+                }
             }
         }
     }

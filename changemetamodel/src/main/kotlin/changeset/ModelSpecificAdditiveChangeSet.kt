@@ -9,24 +9,24 @@ import de.joshuagleitze.transformationnetwork.metametamodel.ModelIdentity
 
 class ModelSpecificAdditiveChangeSet private constructor(
     val targetModel: ModelIdentity,
-    private val _additions: MutableSet<AdditionChange>,
-    private val _deletions: MutableSet<DeletionChange>,
-    private val _modifications: MutableSet<AttributeChange>
+    private val _additions: MutableSet<AdditionChange<*>>,
+    private val _deletions: MutableSet<DeletionChange<*>>,
+    private val _modifications: MutableSet<AttributeChange<*>>
 ) : AdditiveChangeSet {
     constructor(targetModel: ModelIdentity) : this(targetModel, HashSet(), HashSet(), HashSet())
 
     override val affectedModels: Set<ModelIdentity> get() = if (isEmpty()) emptySet() else setOf(targetModel)
-    override val additions: Collection<AdditionChange> get() = _additions
-    override val deletions: Collection<DeletionChange> get() = _deletions
-    override val modifications: Collection<AttributeChange> get() = _modifications
+    override val additions: Collection<AdditionChange<*>> get() = _additions
+    override val deletions: Collection<DeletionChange<*>> get() = _deletions
+    override val modifications: Collection<AttributeChange<*>> get() = _modifications
     override val size: Int get() = _additions.size + _deletions.size + _modifications.size
 
     override fun add(change: ModelChange): Boolean {
         check(change.targetModel == this.targetModel) { "The change’s '$change' target model is not this change set’s target model!" }
         return when (change) {
-            is AdditionChange -> _additions.add(change)
-            is DeletionChange -> _deletions.add(change)
-            is AttributeChange -> _modifications.add(change)
+            is AdditionChange<*> -> _additions.add(change)
+            is DeletionChange<*> -> _deletions.add(change)
+            is AttributeChange<*> -> _modifications.add(change)
         }
     }
 
@@ -41,9 +41,9 @@ class ModelSpecificAdditiveChangeSet private constructor(
     }
 
     override fun contains(element: ModelChange) = when (element) {
-        is AdditionChange -> _additions
-        is DeletionChange -> _deletions
-        is AttributeChange -> _modifications
+        is AdditionChange<*> -> _additions
+        is DeletionChange<*> -> _deletions
+        is AttributeChange<*> -> _modifications
     }.contains(element)
 
     override fun containsAll(elements: Collection<ModelChange>) = elements.all { contains(it) }

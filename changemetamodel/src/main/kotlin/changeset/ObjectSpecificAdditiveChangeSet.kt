@@ -9,25 +9,29 @@ import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 
-class ObjectSpecificAdditiveChangeSet private constructor(
-    val targetObject: ModelObject,
-    private val _changes: HashMap<MetaAttribute<*>, AttributeChange>
+class ObjectSpecificAdditiveChangeSet<O : ModelObject<O>> private constructor(
+    val targetObject: ModelObject<O>,
+    private val _changes: HashMap<MetaAttribute<*>, AttributeChange<O>>
 ) : AdditiveChangeSet {
-    constructor(targetObject: ModelObject) : this(targetObject, HashMap())
+    constructor(targetObject: ModelObject<O>) : this(targetObject, HashMap())
 
-    override val deletions: Collection<DeletionChange> get() = emptyList()
-    override val additions: Collection<AdditionChange> get() = emptyList()
-    override val modifications: Collection<AttributeChange> get() = _changes.values
+    override val deletions: Collection<DeletionChange<O>> get() = emptyList()
+    override val additions: Collection<AdditionChange<O>> get() = emptyList()
+    override val modifications: Collection<AttributeChange<O>> get() = _changes.values
     override val affectedModels: Set<ModelIdentity>
         get() = targetObject.model?.identity?.let { setOf(it) } ?: emptySet()
     override val size: Int get() = _changes.size
 
     override fun add(change: ModelChange) = when (change) {
-        is AttributeChange -> addAttributeChange(change)
-        is ModelObjectChange -> error("Cannot add a ${ModelObjectChange::class.simpleName} to a ${this::class.simpleName}!")
+        is AttributeChange<*> -> addAttributeChange(change)
+        is ModelObjectChange<*> -> error("Cannot add a ${ModelObjectChange::class.simpleName} to a ${this::class.simpleName}!")
     }
 
-    private fun addAttributeChange(change: AttributeChange) = _changes.put(change.targetAttribute, change) != change
+    private fun addAttributeChange(change: AttributeChange<*>): Boolean {
+        check(change.targetObject.matches(targetObject)) { "The added change $change does not target this change sets’ target object $targetObject!" }
+        @Suppress("UNCHECKED_CAST")
+        return _changes.put(change.targetAttribute, change as AttributeChange<O>) != change
+    }
 
     override fun addAll(changes: Collection<ModelChange>) =
         changes.fold(false) { lastResult, change -> add(change) || lastResult }
@@ -44,7 +48,7 @@ class ObjectSpecificAdditiveChangeSet private constructor(
         if (targetObject.model?.let { modelIdentity.identifies(it) } == true) this else ChangeSet.EMPTY
 
     override fun contains(element: ModelChange) = when (element) {
-        is AttributeChange -> _changes[element.targetAttribute] == element
+        is AttributeChange<*> -> _changes[element.targetAttribute] == element
         else -> false
     }
 

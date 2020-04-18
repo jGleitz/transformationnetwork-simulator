@@ -1,5 +1,7 @@
 package de.joshuagleitze.transformationnetwork.metametamodel
 
-interface ModelObjectIdentity : Identity<ModelObject> {
-    val metaclass: Metaclass
+typealias AnyModelObjectIdentity = ModelObjectIdentity<*>
+
+interface ModelObjectIdentity<O : ModelObject<O>> : Identity<ModelObject<*>> {
+    val metaclass: Metaclass<O>
 }

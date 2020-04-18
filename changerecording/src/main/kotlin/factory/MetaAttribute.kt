@@ -1,7 +1,9 @@
 package de.joshuagleitze.transformationnetwork.changerecording.factory
 
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentifier
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
+import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentifier
 import kotlin.reflect.KClass
 
@@ -9,10 +11,13 @@ inline fun <reified T : Any> metaAttribute(name: String): MetaAttribute<T> = Met
 inline fun <reified T : Any> listMetaAttribute(name: String): MetaAttribute<List<T>> =
     ListMetaAttributeImpl(metaAttribute(name))
 
-fun metaReference(name: String, metaclass: Metaclass): MetaAttribute<ModelObjectIdentifier> =
+fun <O : ModelObject<O>> metaReference(name: String, metaclass: Metaclass<O>): MetaAttribute<ModelObjectIdentifier<O>> =
     ReferenceImpl(name, metaclass)
 
-fun listMetaReference(name: String, metaclass: Metaclass): MetaAttribute<List<ModelObjectIdentifier>> =
+fun <O : ModelObject<O>> listMetaReference(
+    name: String,
+    metaclass: Metaclass<O>
+): MetaAttribute<List<ModelObjectIdentifier<O>>> =
     ListMetaAttributeImpl(metaReference(name, metaclass))
 
 @PublishedApi
@@ -27,16 +32,17 @@ internal class MetaAttributeImpl<T : Any>(override val name: String, private val
     override fun toString() = "$name: ${elementType.simpleName}"
 }
 
-internal class ReferenceImpl(name: String, private val metaclass: Metaclass) : MetaAttribute<ModelObjectIdentifier> {
+internal class ReferenceImpl<O : ModelObject<O>>(name: String, private val metaclass: Metaclass<O>) :
+    MetaAttribute<ModelObjectIdentifier<O>> {
     private val innerAttribute = MetaAttributeImpl(name, ModelObjectIdentifier::class)
     override val name: String get() = innerAttribute.name
 
     override fun canBeValue(value: Any?) =
-        innerAttribute.canBeValue(value) && (value as ModelObjectIdentifier).metaclass == metaclass
+        innerAttribute.canBeValue(value) && (value as AnyModelObjectIdentifier).metaclass == metaclass
 
     override fun checkCanBeValue(value: Any?) {
         innerAttribute.checkCanBeValue(value)
-        check((value as ModelObjectIdentifier).metaclass == metaclass) { "$value is not a $metaclass!" }
+        check((value as AnyModelObjectIdentifier).metaclass == metaclass) { "$value is not a $metaclass!" }
     }
 
     override fun toString() = "$name: $metaclass"

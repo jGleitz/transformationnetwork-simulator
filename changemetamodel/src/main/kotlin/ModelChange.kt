@@ -1,9 +1,13 @@
 package de.joshuagleitze.transformationnetwork.changemetamodel
 
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyMetaAttribute
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyMetaclass
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentifier
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelIdentity
+import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentifier
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.newObjectIdentity
@@ -12,19 +16,25 @@ sealed class ModelChange(val targetModel: ModelIdentity) {
     abstract fun applyTo(model: Model)
 }
 
-sealed class ModelObjectChange(targetModel: ModelIdentity) : ModelChange(targetModel)
+typealias AnyModelObjectChange = ModelObjectChange<*>
 
-sealed class AttributeChange(targetModel: ModelIdentity, val targetObject: ModelObjectIdentifier) :
-    ModelChange(targetModel) {
+sealed class ModelObjectChange<O : ModelObject<O>>(targetModel: ModelIdentity) : ModelChange(targetModel)
+
+typealias AnyAttributeChange = AttributeChange<*>
+
+sealed class AttributeChange<O : ModelObject<O>>(
+    targetModel: ModelIdentity,
+    val targetObject: ModelObjectIdentifier<O>
+) : ModelChange(targetModel) {
     abstract val targetAttribute: MetaAttribute<*>
 }
 
-class AdditionChange(
+class AdditionChange<O : ModelObject<O>>(
     targetModel: ModelIdentity,
-    addedObjectClass: Metaclass,
-    val addedObjectIdentity: ModelObjectIdentity = newObjectIdentity(addedObjectClass)
-) : ModelObjectChange(targetModel) {
-    val addedObjectClass: Metaclass get() = addedObjectIdentity.metaclass
+    addedObjectClass: Metaclass<O>,
+    val addedObjectIdentity: ModelObjectIdentity<O> = newObjectIdentity(addedObjectClass)
+) : ModelObjectChange<O>(targetModel) {
+    val addedObjectClass: Metaclass<O> get() = addedObjectIdentity.metaclass
 
     init {
         checkModelObjectType(addedObjectClass)
@@ -41,7 +51,7 @@ class AdditionChange(
         if (this === other) return true
         if (other == null || this::class.js != other::class.js) return false
 
-        other as AdditionChange
+        other as AdditionChange<*>
 
         if (targetModel != other.targetModel) return false
         if (addedObjectIdentity != other.addedObjectIdentity) return false
@@ -56,8 +66,10 @@ class AdditionChange(
     }
 }
 
-class DeletionChange(targetModel: ModelIdentity, val deletedObject: ModelObjectIdentifier) :
-    ModelObjectChange(targetModel) {
+class DeletionChange<O : ModelObject<O>>(
+    targetModel: ModelIdentity,
+    val deletedObject: ModelObjectIdentifier<O>
+) : ModelObjectChange<O>(targetModel) {
     init {
         checkModelObjectType(deletedObject)
     }
@@ -75,7 +87,7 @@ class DeletionChange(targetModel: ModelIdentity, val deletedObject: ModelObjectI
         if (this === other) return true
         if (other == null || this::class.js != other::class.js) return false
 
-        other as DeletionChange
+        other as DeletionChange<*>
 
         if (targetModel != other.targetModel) return false
         if (deletedObject != other.deletedObject) return false
@@ -90,13 +102,15 @@ class DeletionChange(targetModel: ModelIdentity, val deletedObject: ModelObjectI
     }
 }
 
-class AttributeSetChange<T : Any> private constructor(
+typealias AnyAttributeSetChange = AttributeSetChange<*, *>
+
+class AttributeSetChange<O : ModelObject<O>, T : Any> private constructor(
     targetModel: ModelIdentity,
-    targetObject: ModelObjectIdentifier,
+    targetObject: ModelObjectIdentifier<O>,
     override val targetAttribute: MetaAttribute<T>,
     newValue: T? = null,
     private var newValueSet: Boolean = false
-) : AttributeChange(targetModel, targetObject) {
+) : AttributeChange<O>(targetModel, targetObject) {
     val newValue = newValue
         get() {
             check(newValueSet) { "No new value was provided for this change!" }
@@ -111,7 +125,7 @@ class AttributeSetChange<T : Any> private constructor(
 
     constructor(
         targetModel: ModelIdentity,
-        targetObject: ModelObjectIdentifier,
+        targetObject: ModelObjectIdentifier<O>,
         targetAttribute: MetaAttribute<T>,
         newValue: T?
     ) : this(targetModel, targetObject, targetAttribute, newValue = newValue, newValueSet = true)
@@ -129,7 +143,7 @@ class AttributeSetChange<T : Any> private constructor(
         if (this === other) return true
         if (other == null || this::class.js != other::class.js) return false
 
-        other as AttributeSetChange<*>
+        other as AttributeSetChange<*, *>
 
         if (targetModel != other.targetModel) return false
         if (targetObject != other.targetObject) return false
@@ -153,14 +167,14 @@ private fun ModelChange.checkTargetModel(model: Model) {
     check(targetModel.identifies(model)) { "This change targets another logical instance of ${targetModel.metamodel}!" }
 }
 
-private fun ModelChange.checkModelObjectType(modelObjectClass: Metaclass) {
+private fun ModelChange.checkModelObjectType(modelObjectClass: AnyMetaclass) {
     check(targetModel.metamodel.classes.contains(modelObjectClass)) { "The metaclass '$modelObjectClass' does not belong to the target model’s metamodel '${targetModel.metamodel}'!" }
 }
 
-private fun ModelChange.checkModelObjectType(modelObject: ModelObjectIdentifier) {
+private fun ModelChange.checkModelObjectType(modelObject: AnyModelObjectIdentifier) {
     check(targetModel.metamodel.classes.contains(modelObject.metaclass)) { "$modelObject’s metaclass '${modelObject.metaclass}' does not belong to the target model’s metamodel '${targetModel.metamodel}'!" }
 }
 
-private fun ModelObjectIdentifier.checkMetaAttributeInMetaclass(attribute: MetaAttribute<*>) {
+private fun AnyModelObjectIdentifier.checkMetaAttributeInMetaclass(attribute: AnyMetaAttribute) {
     check(metaclass.attributes.contains(attribute)) { "'$attribute' is not an attribute of the target objects’s metaclass '${this.metaclass}" }
 }

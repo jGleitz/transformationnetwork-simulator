@@ -7,6 +7,7 @@ import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording.ApplyMode.RECORD_AND_APPLY
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecording.ApplyMode.RECORD_ONLY
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObjectIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttribute
 import de.joshuagleitze.transformationnetwork.metametamodel.MetaAttributeMap
 import de.joshuagleitze.transformationnetwork.metametamodel.Metaclass
@@ -20,21 +21,26 @@ import de.joshuagleitze.transformationnetwork.publishsubscribe.PublishingObserva
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-abstract class DefaultModelObject(final override val metaclass: Metaclass, identity: ModelObjectIdentity?) :
-    ChangeRecordingModelObject {
+abstract class DefaultModelObject<O : DefaultModelObject<O>>(
+    final override val metaclass: Metaclass<O>,
+    identity: AnyModelObjectIdentity?
+) : ChangeRecordingModelObject<O> {
     internal var internalModel: DefaultModel? = null
     override val model: Model? get() = internalModel
     private val _attributes = AttributeMap()
     override val attributes: MetaAttributeMap get() = _attributes
-    private var changeSet: ObjectSpecificAdditiveChangeSet? = null
+    private var changeSet: ObjectSpecificAdditiveChangeSet<O>? = null
     private var recordOnly = false
-    private val _changes = PublishingObservable<AttributeSetChange<*>>()
-    override val identity = identity ?: newObjectIdentity(metaclass)
-    override val directChanges: Observable<AttributeSetChange<*>> get() = _changes
+    private val _changes = PublishingObservable<AttributeSetChange<O, *>>()
 
-    protected fun <T : Any> attributeAccess(attribute: MetaAttribute<T>) = _attributes.attributeAccess(attribute)
+    @Suppress("UNCHECKED_CAST")
+    override val identity = identity as ModelObjectIdentity<O>? ?: newObjectIdentity(metaclass)
+    override val directChanges: Observable<AttributeSetChange<O, *>> get() = _changes
 
-    protected fun import(otherModelObject: DefaultModelObject) {
+    protected fun <T : Any> attributeAccess(attribute: MetaAttribute<T>) =
+        _attributes.attributeAccess(attribute)
+
+    protected fun import(otherModelObject: DefaultModelObject<O>) {
         this.internalModel = otherModelObject.internalModel
         this.metaclass.attributes.forEach { attribute ->
             this[attribute] = otherModelObject[attribute]
@@ -118,7 +124,7 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass, ident
             return getChecked(attribute)
         }
 
-        private fun recordAndPublish(changeProducer: (Model) -> AttributeSetChange<*>) {
+        private fun recordAndPublish(changeProducer: (Model) -> AttributeSetChange<O, *>) {
             model?.let { model ->
                 val change = changeProducer(model)
                 changeSet?.add(change)
@@ -134,7 +140,7 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass, ident
         private fun checkIsMember(attribute: MetaAttribute<*>) =
             check(metaclass.attributes.contains(attribute)) { "'$attribute' is not an attribute of $metaclass!" }
 
-        internal fun <T : Any> attributeAccess(attribute: MetaAttribute<T>): ReadWriteProperty<DefaultModelObject, T?> {
+        internal fun <T : Any> attributeAccess(attribute: MetaAttribute<T>): ReadWriteProperty<DefaultModelObject<*>, T?> {
             checkIsMember(attribute)
             return AttributeAccess(attribute)
         }
@@ -143,11 +149,11 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass, ident
     }
 
     private class AttributeAccess<T : Any>(val attribute: MetaAttribute<T>) :
-        ReadWriteProperty<DefaultModelObject, T?> {
-        override fun getValue(thisRef: DefaultModelObject, property: KProperty<*>) =
+        ReadWriteProperty<DefaultModelObject<*>, T?> {
+        override fun getValue(thisRef: DefaultModelObject<*>, property: KProperty<*>) =
             thisRef._attributes.getChecked(attribute)
 
-        override fun setValue(thisRef: DefaultModelObject, property: KProperty<*>, value: T?) =
+        override fun setValue(thisRef: DefaultModelObject<*>, property: KProperty<*>, value: T?) =
             thisRef._attributes.setChecked(attribute, value)
     }
 
@@ -155,7 +161,7 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass, ident
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other == null || other !is ModelObject) return false
+        if (other == null || other !is ModelObject<*>) return false
 
         if (other.model != this.model) return false
         if (other.metaclass != this.metaclass) return false
@@ -168,4 +174,6 @@ abstract class DefaultModelObject(final override val metaclass: Metaclass, ident
         result = 31 * result + this.metaclass.attributes.sumBy { this[it].hashCode() }
         return result
     }
+
+    override fun copy(): O = metaclass.createNew().also { import(this) }
 }
