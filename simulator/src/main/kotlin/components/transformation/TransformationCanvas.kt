@@ -41,7 +41,7 @@ private object TransformationCanvasStyles : StyleSheet("TransformationCanvas") {
 
 interface TransformationCanvasProps : RProps {
     var modelArrowTargetProvider: (Model) -> ArrowTarget
-    var transformations: Set<ObservableModelTransformation>
+    var transformations: Collection<ObservableModelTransformation>
 }
 
 private interface TransformationState : RState {
@@ -89,7 +89,7 @@ private class TransformationCanvas : RComponent<TransformationCanvasProps, Trans
 
 fun RBuilder.TransformationCanvas(
     modelArrowTargetProvider: (Model) -> ArrowTarget,
-    transformations: Set<ObservableModelTransformation>
+    transformations: Collection<ObservableModelTransformation>
 ) = child(TransformationCanvas::class) {
     attrs.modelArrowTargetProvider = modelArrowTargetProvider
     attrs.transformations = transformations

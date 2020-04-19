@@ -11,7 +11,7 @@ object TuringMachineMetamodel : AbstractMetamodel() {
 
 fun <T : Model> T.withInitialState(initialBand: String = "", initialBandPosition: Int = 0) = this.apply {
     this += TuringState().apply {
-        timestamp = -1
+        timestamp = -2
         band = initialBand
         bandPosition = initialBandPosition
     }
