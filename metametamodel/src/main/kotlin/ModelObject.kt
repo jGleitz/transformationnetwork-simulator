@@ -13,5 +13,5 @@ interface ModelObject<O : ModelObject<O>> {
     operator fun <T : Any> set(attribute: MetaAttribute<T>, value: T?) = attributes.set(attribute, value)
     operator fun set(attribute: MetaAttribute<*>, value: Any?) = attributes.set(attribute, value)
 
-    fun copy(): O
+    fun copy(newIdentity: AnyModelObjectIdentity? = null): O
 }

@@ -16,7 +16,7 @@ class StepByStep : PropagationStrategy {
 
     private suspend fun PropagationScope.propagate(changes: ChangeSet, network: TransformationNetwork) {
         val candidates = HashSet(network.transformations)
-        val done = HashSet<ModelTransformation>()
+        val executed = HashSet<ModelTransformation>()
         val allChanges = DefaultAdditiveChangeSet(changes)
         val candidatesInOrder = generateSequence {
             candidates.find { allChanges.affect(it) }
@@ -26,10 +26,10 @@ class StepByStep : PropagationStrategy {
             yield() {
                 candidateChanges = executeTransformation(candidate, allChanges)
             }
-            propagate(candidateChanges, network.subnetwork(done))
+            propagate(candidateChanges, network.subnetworkInducedBy(executed))
             allChanges += candidateChanges
             candidates -= candidate
-            done += candidate
+            executed += candidate
         }
     }
 }

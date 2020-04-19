@@ -24,9 +24,12 @@ data class PositionedTransformationNetwork(
     override fun getModel(modelIdentity: ModelIdentity): PositionedModel? =
         models.find { modelIdentity.identifies(it) }
 
-    override operator fun get(modelIdentity: ModelIdentity) = getModel(modelIdentity)
+    override fun getTransformationBetween(first: ModelIdentity, second: ModelIdentity) =
+        transformations.filter { transformation ->
+            transformation.models.count { first.identifies(it) || second.identifies(it) } == 2
+        }
 
-    override fun subnetwork(transformations: Set<ModelTransformation>): TransformationNetwork {
+    override fun subnetworkInducedBy(transformations: Set<ModelTransformation>): TransformationNetwork {
         check(this.transformations.containsAll(transformations)) {
             val badTransformations = transformations - this.transformations
             "Cannot build a subnetwork because these transformations are not part of this network: $badTransformations"

@@ -1,5 +1,7 @@
 package de.joshuagleitze.transformationnetwork.simulator.util.geometry
 
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.sqrt
 
 data class Coordinate(val x: Double, val y: Double) {
@@ -28,6 +30,12 @@ data class Coordinate(val x: Double, val y: Double) {
     fun normalize() = this / this.distanceTo(Zero)
     operator fun unaryMinus() = componentWise { -it }
 
+    override fun toString() = "($x,$y)"
+
+    fun isInteger() = x.isInteger() && y.isInteger()
+
+    private fun Double.isInteger() = this.isFinite() && floor(this) == ceil(this)
+
     companion object {
         val Zero = Coordinate(0, 0)
         fun fromPolar(theta: Angle, r: Double) = Coordinate(r * theta.cosine(), r * theta.sine())
@@ -40,3 +48,5 @@ operator fun Int.times(coordinate: Coordinate) = coordinate * this
 operator fun Long.times(coordinate: Coordinate) = coordinate * this
 operator fun Float.times(coordinate: Coordinate) = coordinate * this
 operator fun Double.times(coordinate: Coordinate) = coordinate * this
+infix fun Double.x(y: Double) = Coordinate(this, y)
+infix fun Number.x(y: Number) = Coordinate(this, y)

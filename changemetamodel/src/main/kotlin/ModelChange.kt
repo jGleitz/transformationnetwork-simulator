@@ -10,6 +10,7 @@ import de.joshuagleitze.transformationnetwork.metametamodel.ModelIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObject
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentifier
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentity
+import de.joshuagleitze.transformationnetwork.metametamodel.byIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.newObjectIdentity
 
 sealed class ModelChange(val targetModel: ModelIdentity) {
@@ -130,12 +131,22 @@ class AttributeSetChange<O : ModelObject<O>, T : Any> private constructor(
         newValue: T?
     ) : this(targetModel, targetObject, targetAttribute, newValue = newValue, newValueSet = true)
 
+    constructor(
+        targetModel: Model,
+        targetObject: ModelObject<O>,
+        targetAttribute: MetaAttribute<T>,
+        newValue: T?
+    ) : this(targetModel.identity, byIdentity(targetObject.identity), targetAttribute, newValue)
+
     override fun applyTo(model: Model) {
         checkTargetModel(model)
         model.applicationObject[targetAttribute] = newValue
     }
 
-    private val Model.applicationObject get() = checkNotNull(this.getObject(targetObject)) { "Cannot find the target object '$targetObject' in the model '$this'!" }
+    private val Model.applicationObject
+        get() = checkNotNull(this.getObject(targetObject)) {
+            "Cannot find the target object '$targetObject' in the model '$this'!"
+        }
 
     override fun toString() = "$targetObject[$targetAttribute] = $newValue"
 

@@ -125,8 +125,8 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
 
                 css {
                     +ModelStyles.modelContainer
-                    gridColumnStart = GridColumnStart(props.model.position.column.toString())
-                    gridRowStart = GridRowStart(props.model.position.row.toString())
+                    gridColumnStart = GridColumnStart(props.model.position.x.toString())
+                    gridRowStart = GridRowStart(props.model.position.y.toString())
                 }
                 styledH3 {
                     css { +ModelStyles.modelName }
