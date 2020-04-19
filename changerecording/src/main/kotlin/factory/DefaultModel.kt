@@ -48,7 +48,7 @@ internal class DefaultModel private constructor(
     private val recordOnly get() = this.changeRecording?.mode == RECORD_ONLY
 
     constructor(name: String, metamodel: Metamodel, objects: Iterable<AnyChangeRecordingModelObject>)
-            : this(name, objects, newIdentity(metamodel))
+        : this(name, objects, newIdentity(metamodel))
 
     init {
         objects.forEach { modelObject ->
@@ -61,6 +61,7 @@ internal class DefaultModel private constructor(
         if (modelObject is DefaultModelObject<*> && !recordOnly) {
             modelObject.internalModel = this
         }
+        @Suppress("UNCHECKED_CAST")
         modelObject as ChangeRecordingModelObject<Nothing>
         val isChange = if (!recordOnly) _objects.add(modelObject) else !_objects.contains(modelObject)
         if (isChange) recordAndPublish(AdditionChange(this.identity, modelObject.metaclass, modelObject.identity))
@@ -103,7 +104,7 @@ internal class DefaultModel private constructor(
     override fun copy() =
         DefaultModel(
             this.name,
-            this._objects.map { it.copy() },
+            this._objects.map { it.copy(it.identity) },
             this.identity
         )
 

@@ -7,19 +7,23 @@ pluginManagement {
     }
 }
 
-include(":publishsubscribe")
-include(":metametamodel")
-include(":modeltransformation")
-include(":changemetamodel")
-include(":changerecording")
-include(":network")
-include(":models:persons")
-include(":models:guestlist")
-include(":models:openapi")
-include(":models:uml")
-include(":models:java")
-include(":transformations:persons2guests")
-include(":transformations:uml2java")
-include(":transformations:java2openapi")
-include(":simulator")
+include(
+    ":publishsubscribe",
+    ":metametamodel",
+    ":modeltransformation",
+    ":changemetamodel",
+    ":changerecording",
+    ":network",
+    ":models:persons",
+    ":models:guestlist",
+    ":models:openapi",
+    ":models:uml",
+    ":models:java",
+    ":models:turingmachine",
+    ":transformations:persons2guests",
+    ":transformations:uml2java",
+    ":transformations:java2openapi",
+    ":transformations:busybeaver3",
+    ":simulator"
+)
 

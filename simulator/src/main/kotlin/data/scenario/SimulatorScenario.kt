@@ -2,14 +2,14 @@ package de.joshuagleitze.transformationnetwork.simulator.data.scenario
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
 import de.joshuagleitze.transformationnetwork.simulator.data.Described
 
 class SimulatorScenario(
     override val name: String,
     models: List<PositionedModel>,
     transformations: Set<ObservableModelTransformation>,
-    val changes: List<ChangeSet>
+    val changes: List<ChangeSet>,
+    val initialize: SimulatorScenario.() -> Unit = {}
 ): Described {
     private val originalModels = models
     private val originalTransformations = transformations
@@ -34,5 +34,6 @@ class SimulatorScenario(
         }
         val currentModels = originalModels.map { newModelMap[it.model] ?: error("") }
         currentNetwork = PositionedTransformationNetwork(currentModels, currentTransformations)
+        initialize()
     }
 }

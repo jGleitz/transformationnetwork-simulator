@@ -154,7 +154,7 @@ private class SimulationControl : RComponent<SimulationControlProps, SimulationC
         val changes = props.changes[nextStateIndex]
         changes.forEach { change ->
             change.applyTo(
-                props.network[change.targetModel]
+                props.network.getModel(change.targetModel)
                     ?: error("Cannot find the correct model instance for '$change'")
             )
         }

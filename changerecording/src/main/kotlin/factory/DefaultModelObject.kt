@@ -175,5 +175,7 @@ abstract class DefaultModelObject<O : DefaultModelObject<O>>(
         return result
     }
 
-    override fun copy(): O = metaclass.createNew().also { import(this) }
+    override fun copy(newIdentity: AnyModelObjectIdentity?): O = metaclass.createNew(newIdentity).also {
+        it.import(this)
+    }
 }

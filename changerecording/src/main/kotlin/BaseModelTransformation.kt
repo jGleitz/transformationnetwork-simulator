@@ -153,7 +153,7 @@ abstract class BaseModelTransformation : ObservableModelTransformation {
             targetSide: Side,
             tag: AnyCorrespondenceTag
         ) = checkNotNull(getCorrespondence(modelObject, targetSide, tag)) {
-            "Cannot find a correspondence for $modelObject in the ${targetSide.name} model!"
+            "Cannot find a correspondence for $modelObject in the $targetSide model!"
         }
 
         override fun <Left : ModelObject<Left>, Right : ModelObject<Right>> addLeftToRightCorrespondence(

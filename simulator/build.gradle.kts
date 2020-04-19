@@ -17,9 +17,11 @@ dependencies {
     implementation(project(":models:uml"))
     implementation(project(":models:java"))
     implementation(project(":models:openapi"))
+    implementation(project(":models:turingmachine"))
     implementation(project(":transformations:persons2guests"))
     implementation(project(":transformations:uml2java"))
     implementation(project(":transformations:java2openapi"))
+    implementation(project(":transformations:busybeaver3"))
 
     val reactVersion = "16.13.1"
     implementation(npm("react", reactVersion))
