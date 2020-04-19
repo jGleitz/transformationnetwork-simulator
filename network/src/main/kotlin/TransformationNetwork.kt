@@ -4,11 +4,10 @@ import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingMod
 import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelIdentity
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
 
 interface TransformationNetwork {
-    val models: List<ChangeRecordingModel>
-    val transformations: Set<ObservableModelTransformation>
+    val models: Collection<ChangeRecordingModel>
+    val transformations: Collection<ObservableModelTransformation>
 
     fun transformationEdgesOf(model: Model): Set<ObservableModelTransformation> =
         transformations.filterTo(HashSet()) { it.leftModel == model || it.rightModel == model }
@@ -29,5 +28,5 @@ interface TransformationNetwork {
         return transformations.first()
     }
 
-    fun subnetworkInducedBy(transformations: Set<ModelTransformation>): TransformationNetwork
+    fun subnetworkInducedBy(transformations: Set<ObservableModelTransformation>): TransformationNetwork
 }

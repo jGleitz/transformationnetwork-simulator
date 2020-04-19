@@ -22,10 +22,11 @@ class Q0Qf(val q0Model: ChangeRecordingModel, val qfModel: ChangeRecordingModel)
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override fun createNextRightState(q0: NonNullTuringState, qf: NonNullTuringState): NonNullTuringState =
         when (q0.currentChar) {
-            '1' -> q0.copy(
-                timestamp = q0.timestamp + 1,
-                bandPosition = q0.bandPosition + 1
-            )
+            '1' ->
+                q0.copy(
+                    timestamp = q0.timestamp + 1,
+                    bandPosition = q0.bandPosition + 1
+                )
             else -> qf
         }
 

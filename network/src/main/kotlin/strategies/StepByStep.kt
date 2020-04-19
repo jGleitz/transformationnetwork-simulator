@@ -2,7 +2,7 @@ package de.joshuagleitze.transformationnetwork.network.strategies
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.DefaultAdditiveChangeSet
-import de.joshuagleitze.transformationnetwork.modeltransformation.ModelTransformation
+import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
 import de.joshuagleitze.transformationnetwork.network.PropagationScope
 import de.joshuagleitze.transformationnetwork.network.PropagationStrategy
 import de.joshuagleitze.transformationnetwork.network.TransformationNetwork
@@ -16,7 +16,7 @@ class StepByStep : PropagationStrategy {
 
     private suspend fun PropagationScope.propagate(changes: ChangeSet, network: TransformationNetwork) {
         val candidates = HashSet(network.transformations)
-        val executed = HashSet<ModelTransformation>()
+        val executed = HashSet<ObservableModelTransformation>()
         val allChanges = DefaultAdditiveChangeSet(changes)
         val candidatesInOrder = generateSequence {
             candidates.find { allChanges.affect(it) }

@@ -24,20 +24,26 @@ class Q1Q2(val q1Model: ChangeRecordingModel, val q2Model: ChangeRecordingModel)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override fun createNextRightState(q1: NonNullTuringState, q2: NonNullTuringState) = when (q1.currentChar) {
-        '0' -> {
-            var newQ2 = q1.copy(timestamp = q1.timestamp + 1)
-                .ensureCanMoveRight('0')
-            newQ2 = newQ2.copy(bandPosition = newQ2.band.findFirstLeft('1', from = q1.bandPosition + 1) ?: -1)
+        '0' ->
+            q1.ensureCanMoveRight('0')
+                .copy(
+                    timestamp = q1.timestamp + 1,
+                    bandPosition = q1.bandPosition + 1
+                )
+                .runIf({ currentChar == '0' }) {
+                    val leftIndex = band.findFirstLeft('1', from = bandPosition) ?: -1
+                    copy(
+                        timestamp = timestamp + 1,
+                        bandPosition = band.findFirstLeft('1', from = bandPosition) ?: -1,
+                        band = band.set((leftIndex + 1)..bandPosition, '1')
+                    )
+                }
                 .fixBandRange('0')
-            val bandReplaceRange =
-                if (newQ2.bandPosition < q1.bandPosition) (newQ2.bandPosition + 1)..(q1.bandPosition + 1)
-                else IntRange.EMPTY
-            newQ2.copy(band = newQ2.band.replaceRange(bandReplaceRange, "1".repeat(bandReplaceRange.count())))
-        }
         else -> q2
     }
 
-    companion object Type : BaseModelTransformationType(TuringMachineMetamodel, TuringMachineMetamodel) {
+    companion object Type
+        : BaseModelTransformationType(TuringMachineMetamodel, TuringMachineMetamodel) {
         override fun createChecked(leftModel: ChangeRecordingModel, rightModel: ChangeRecordingModel) =
             Q1Q2(leftModel, rightModel)
     }

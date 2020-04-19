@@ -1,17 +1,16 @@
 package de.joshuagleitze.transformationnetwork.transformations.busybeaver3
 
 import de.joshuagleitze.transformationnetwork.models.turingmachine.TuringState
-import kotlin.math.max
 
 data class NonNullTuringState(val timestamp: Int, val band: String, val bandPosition: Int) {
     fun ensureCanMoveRight(newChar: Char = ' ') = copy(
         band = if (this.bandPosition == this.band.length - 1) this.band + newChar else this.band
     )
 
-    fun ensureCanMoveLeft(newChar: Char = ' ') = copy(
-        band = if (this.bandPosition == 0) newChar + this.band else this.band,
-        bandPosition = max(0, this.bandPosition)
-    )
+    fun ensureCanMoveLeft(newChar: Char = ' ') = if (this.bandPosition == 0) copy(
+        band = newChar + this.band,
+        bandPosition = 1
+    ) else this
 
     fun fixBandRange(newChar: Char) = when {
         bandPosition < 0 -> copy(band = "$newChar".repeat(0 - bandPosition) + band, bandPosition = 0)
