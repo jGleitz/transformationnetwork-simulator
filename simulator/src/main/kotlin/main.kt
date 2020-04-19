@@ -39,9 +39,9 @@ import de.joshuagleitze.transformationnetwork.transformations.busybeaver3.Q0Q1
 import de.joshuagleitze.transformationnetwork.transformations.busybeaver3.Q0Qf
 import de.joshuagleitze.transformationnetwork.transformations.busybeaver3.Q1Q2
 import de.joshuagleitze.transformationnetwork.transformations.busybeaver3.Q2Q0
+import kotlinext.js.invoke
 import react.dom.render
-import styled.StyledComponents
-import styled.injectGlobal
+import styled.createGlobalStyle
 import kotlin.browser.document
 import kotlin.browser.window
 import kotlin.js.Date
@@ -150,7 +150,7 @@ private val strategies = listOf(
 fun main() {
     window.onload = {
         val root = document.getElementById("root") ?: throw IllegalStateException("Cannot find the root!")
-        StyledComponents.injectGlobal(globalStyleSheet.toString())
+        createGlobalStyle(globalStyleSheet.toString())
 
         render(root) {
             TransformationSimulator(scenarios, strategies)
