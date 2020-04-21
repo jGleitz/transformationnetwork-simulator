@@ -14,22 +14,30 @@ import kotlinx.css.GridColumnStart
 import kotlinx.css.GridRowStart
 import kotlinx.css.GridTemplateColumns
 import kotlinx.css.LinearDimension.Companion.auto
+import kotlinx.css.Outline.none
 import kotlinx.css.display
 import kotlinx.css.fr
 import kotlinx.css.gridColumnStart
 import kotlinx.css.gridRowStart
 import kotlinx.css.gridTemplateColumns
 import kotlinx.css.margin
+import kotlinx.css.outline
 import kotlinx.css.padding
 import kotlinx.css.pct
 import kotlinx.css.width
 import kotlinx.html.HTMLTag
 import kotlinx.html.js.onClickFunction
+import kotlinx.html.js.onKeyDownFunction
+import kotlinx.html.tabIndex
+import org.w3c.dom.HTMLElement
+import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RComponent
 import react.RHandler
 import react.RProps
+import react.RReadableRef
 import react.RState
+import react.createRef
 import react.dom.RDOMBuilder
 import react.dom.button
 import react.dom.jsStyle
@@ -38,12 +46,14 @@ import styled.StyleSheet
 import styled.css
 import styled.styledDiv
 import styled.styledSpan
+import kotlin.browser.document
 
 private object SimulationControlStyles : StyleSheet("SimulationControl") {
     val container by css {
         width = 100.pct
         display = grid
         gridTemplateColumns = GridTemplateColumns(1.fr, auto, 1.fr)
+        outline = none
     }
     val leftControls by css {
         put("justify-self", "end")
@@ -69,17 +79,21 @@ private object SimulationControlStyles : StyleSheet("SimulationControl") {
     }
 }
 
+private const val PAGE_DOWN = 34
+private const val Z = 90
+
 interface SimulationControlProps : RProps {
     var strategy: PropagationStrategy
     var changes: List<ChangeSet>
     var network: TransformationNetwork
-    var setTime: (Int) -> Unit
+    var timeStep: () -> Unit
     var resetSimulation: () -> Unit
 }
 
 private interface SimulationControlState : RState {
     var currentPropagation: Propagation?
     var nextChangeIndex: Int
+    var outerRef: RReadableRef<HTMLElement>
 }
 
 private class SimulationControl : RComponent<SimulationControlProps, SimulationControlState>() {
@@ -87,6 +101,7 @@ private class SimulationControl : RComponent<SimulationControlProps, SimulationC
         state = jsObject {
             currentPropagation = null
             nextChangeIndex = 0
+            outerRef = createRef()
         }
     }
 
@@ -94,6 +109,11 @@ private class SimulationControl : RComponent<SimulationControlProps, SimulationC
         time.Consumer { time ->
             styledDiv {
                 css { +SimulationControlStyles.container }
+                attrs {
+                    ref = state.outerRef
+                    tabIndex = "0"
+                    onKeyDownFunction = ::onKeyDown
+                }
 
                 styledDiv {
                     css { +SimulationControlStyles.leftControls }
@@ -120,17 +140,14 @@ private class SimulationControl : RComponent<SimulationControlProps, SimulationC
                     styledDiv {
                         css { +SimulationControlStyles.overlayButtonContainer }
 
-                        val hasPropagationStep = state.currentPropagation?.isFinished() == false
-                        val hasChange = state.nextChangeIndex < props.changes.size
-
                         button {
                             visibleIf(hasPropagationStep)
-                            attrs.onClickFunction = { applyNextPropagationStep(time) }
+                            attrs.onClickFunction = { applyNextPropagationStep() }
                             +"next propagation step"
                         }
                         button {
                             visibleIf(hasChange && !hasPropagationStep)
-                            attrs.onClickFunction = { applyNextChange(time) }
+                            attrs.onClickFunction = { applyNextChange() }
                             +"apply next change"
                         }
                         button {
@@ -144,11 +161,40 @@ private class SimulationControl : RComponent<SimulationControlProps, SimulationC
         }
     }
 
+    override fun componentDidMount() {
+        captureFocus(null)
+        document.addEventListener("focus", captureFocus)
+    }
+
+    override fun componentWillUnmount() {
+        document.removeEventListener("focus", captureFocus)
+    }
+
+    private val captureFocus: (_: Event?) -> Unit = {
+        state.outerRef.current?.focus()
+    }
+
+    private fun onKeyDown(event: dynamic) {
+        when (event.keyCode) {
+            PAGE_DOWN -> {
+                when {
+                    hasPropagationStep -> applyNextPropagationStep()
+                    hasChange -> applyNextChange()
+                }
+                event.preventDefault()
+            }
+            Z -> {
+                props.resetSimulation()
+                event.preventDefault()
+            }
+        }
+    }
+
     private fun RDOMBuilder<HTMLTag>.visibleIf(condition: Boolean) {
         attrs.jsStyle["visibility"] = if (condition) "visible" else "hidden"
     }
 
-    private fun applyNextChange(time: Int) {
+    private fun applyNextChange() {
         val nextStateIndex = state.nextChangeIndex
         check(nextStateIndex < props.changes.size) { "No more changes!" }
         val changes = props.changes[nextStateIndex]
@@ -162,16 +208,20 @@ private class SimulationControl : RComponent<SimulationControlProps, SimulationC
             this.currentPropagation = props.strategy.preparePropagation(changes, props.network)
             this.nextChangeIndex = nextStateIndex + 1
         }
-        props.setTime(time + 1)
+        props.timeStep()
     }
 
-    private fun applyNextPropagationStep(time: Int) {
+    private fun applyNextPropagationStep() {
         val currentPropagation = state.currentPropagation
         checkNotNull(currentPropagation) { "No current propagation!" }
         currentPropagation.propagateNext()
         if (currentPropagation.isFinished()) setState { this.currentPropagation = null }
-        props.setTime(time + 1)
+        props.timeStep()
     }
+
+    private val hasPropagationStep get() = state.currentPropagation?.isFinished() == false
+
+    private val hasChange get() = state.nextChangeIndex < props.changes.size
 }
 
 fun RBuilder.SimulationControl(handler: RHandler<SimulationControlProps> = {}) = child(SimulationControl::class) {
