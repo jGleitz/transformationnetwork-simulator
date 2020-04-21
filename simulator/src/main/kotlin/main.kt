@@ -6,6 +6,7 @@ import de.joshuagleitze.transformationnetwork.network.strategies.UnboundedPropag
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.TransformationSimulator
 import de.joshuagleitze.transformationnetwork.simulator.data.strategy.describe
 import de.joshuagleitze.transformationnetwork.simulator.scenarios.BusyBeaver3
+import de.joshuagleitze.transformationnetwork.simulator.scenarios.Counting
 import de.joshuagleitze.transformationnetwork.simulator.scenarios.ObjectOriented
 import de.joshuagleitze.transformationnetwork.simulator.scenarios.PersonsAndGuests
 import de.joshuagleitze.transformationnetwork.simulator.styles.globalStyleSheet
@@ -20,7 +21,8 @@ import kotlin.browser.window
 private val scenarios = listOf(
     PersonsAndGuests.create(),
     ObjectOriented.create(),
-    BusyBeaver3.create()
+    BusyBeaver3.create(),
+    Counting.create()
 )
 
 private val strategies = listOf(
