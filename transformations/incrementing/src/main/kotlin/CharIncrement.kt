@@ -1,3 +1,4 @@
+import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.plus
 import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformation
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
 import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformationType
@@ -29,22 +30,13 @@ class CharIncrement private constructor(
             && rightWord.contains(rightChar) implies { rightWord.contains(rightChar + 1) }
 
     override fun processChangesChecked(leftSide: TransformationSide, rightSide: TransformationSide) {
-        if (leftSide.changes.modifications.targetting(Word.Metaclass).isNotEmpty()) {
-            processLeftChange()
-        }
-        if (rightSide.changes.modifications.targetting(Word.Metaclass).isNotEmpty()) {
-            processRightChange()
+        if ((leftSide.changes + rightSide.changes).modifications.targetting(Word.Metaclass).isNotEmpty()) {
+            processChange()
         }
     }
 
-    private fun processLeftChange() {
-        val newWord = newWord(leftWord)
-        leftWord = newWord
-        rightWord = newWord
-    }
-
-    private fun processRightChange() {
-        val newWord = newWord(rightWord)
+    private fun processChange() {
+        val newWord = newWord(max(leftWord, rightWord))
         leftWord = newWord
         rightWord = newWord
     }
@@ -66,6 +58,8 @@ class CharIncrement private constructor(
     private val Model.valueContainer get() = this.objects.ofType(Word.Metaclass).first()
     private val leftChar get() = type.leftChar
     private val rightChar get() = type.rightChar
+
+    private fun max(a: String, b: String) = if (b.length > a.length) b else a
 
     class Type(val leftChar: Char, val rightChar: Char) : ObservableModelTransformationType {
         override val leftMetamodel get() = PrimitivesMetamodel

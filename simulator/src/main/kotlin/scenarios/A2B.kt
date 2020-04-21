@@ -12,10 +12,11 @@ import de.joshuagleitze.transformationnetwork.simulator.data.scenario.at
 import de.joshuagleitze.transformationnetwork.simulator.util.geometry.x
 
 object A2B {
-    fun create(size: Int): SimulatorScenario {
+    fun create(transformationCount: Int): SimulatorScenario {
+        val size = transformationCount + 1
         fun permute(i: Int) = when {
             i % 2 == 0 -> (size - 1) - i / 2
-            else -> (size - 1) / 2 - i / 2 - 1
+            else -> size / 2 - i / 2 - 1
         }
 
         val models = (0 until size).map { index ->
@@ -31,7 +32,7 @@ object A2B {
                     .create(models[leftIndex].model, models[rightIndex].model)
             }
         return SimulatorScenario(
-            "A → B ($size)",
+            "A → B ($transformationCount)",
             models,
             transformations.toSet(),
             listOf(

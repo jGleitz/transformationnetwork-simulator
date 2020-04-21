@@ -1,6 +1,6 @@
 package de.joshuagleitze.transformationnetwork.simulator
 
-import de.joshuagleitze.transformationnetwork.network.strategies.OncePerTransformation
+import de.joshuagleitze.transformationnetwork.network.strategies.ConstantPerTransformation
 import de.joshuagleitze.transformationnetwork.network.strategies.StepByStep
 import de.joshuagleitze.transformationnetwork.network.strategies.UnboundedPropagation
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.TransformationSimulator
@@ -24,13 +24,16 @@ private val scenarios = listOf(
     ObjectOriented.create(),
     BusyBeaver3.create(),
     Counting.create(),
+    A2B.create(4),
     A2B.create(5)
 )
 
 private val strategies = listOf(
     UnboundedPropagation().describe(name = "Unbounded Propagation"),
     StepByStep().describe(name = "Step by Step"),
-    OncePerTransformation().describe(name = "Once per Transformation")
+    ConstantPerTransformation(1).describe(name = "1x per Transformation"),
+    ConstantPerTransformation(3).describe(name = "3x per Transformation"),
+    ConstantPerTransformation(4).describe(name = "4x per Transformation")
 )
 
 fun main() {
