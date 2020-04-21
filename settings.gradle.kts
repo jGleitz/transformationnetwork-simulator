@@ -20,7 +20,7 @@ include(
     ":models:uml",
     ":models:java",
     ":models:turingmachine",
-    ":models:number",
+    ":models:primitives",
     ":transformations:persons2guests",
     ":transformations:uml2java",
     ":transformations:java2openapi",

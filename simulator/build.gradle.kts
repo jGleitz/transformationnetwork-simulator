@@ -18,7 +18,7 @@ dependencies {
     implementation(project(":models:java"))
     implementation(project(":models:openapi"))
     implementation(project(":models:turingmachine"))
-    implementation(project(":models:number"))
+    implementation(project(":models:primitives"))
     implementation(project(":transformations:persons2guests"))
     implementation(project(":transformations:uml2java"))
     implementation(project(":transformations:java2openapi"))

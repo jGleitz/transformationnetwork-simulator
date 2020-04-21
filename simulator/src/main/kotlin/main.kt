@@ -5,6 +5,7 @@ import de.joshuagleitze.transformationnetwork.network.strategies.StepByStep
 import de.joshuagleitze.transformationnetwork.network.strategies.UnboundedPropagation
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.TransformationSimulator
 import de.joshuagleitze.transformationnetwork.simulator.data.strategy.describe
+import de.joshuagleitze.transformationnetwork.simulator.scenarios.A2B
 import de.joshuagleitze.transformationnetwork.simulator.scenarios.BusyBeaver3
 import de.joshuagleitze.transformationnetwork.simulator.scenarios.Counting
 import de.joshuagleitze.transformationnetwork.simulator.scenarios.ObjectOriented
@@ -22,7 +23,8 @@ private val scenarios = listOf(
     PersonsAndGuests.create(),
     ObjectOriented.create(),
     BusyBeaver3.create(),
-    Counting.create()
+    Counting.create(),
+    A2B.create(5)
 )
 
 private val strategies = listOf(

@@ -1,4 +1,4 @@
-package de.joshuagleitze.transformationnetwork.models.number
+package de.joshuagleitze.transformationnetwork.models.primitives
 
 import de.joshuagleitze.transformationnetwork.changerecording.factory.DefaultModelObject
 import de.joshuagleitze.transformationnetwork.changerecording.factory.metaAttribute

@@ -4,22 +4,22 @@ import Incrementing
 import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeSetChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.changeSetOf
 import de.joshuagleitze.transformationnetwork.changerecording.factory.model
-import de.joshuagleitze.transformationnetwork.models.number.Number.Metaclass.Attributes.value
-import de.joshuagleitze.transformationnetwork.models.number.NumberMetamodel
-import de.joshuagleitze.transformationnetwork.models.number.withNumber
+import de.joshuagleitze.transformationnetwork.models.primitives.Number.Metaclass.Attributes.value
+import de.joshuagleitze.transformationnetwork.models.primitives.PrimitivesMetamodel
+import de.joshuagleitze.transformationnetwork.models.primitives.withNumber
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.SimulatorScenario
 import de.joshuagleitze.transformationnetwork.simulator.data.scenario.at
 import de.joshuagleitze.transformationnetwork.simulator.util.geometry.x
 
 object Counting {
     fun create(): SimulatorScenario {
-        val center = NumberMetamodel.model("Z").withNumber(0)
-        val ten1 = NumberMetamodel.model("10/1").withNumber(0)
-        val ten2 = NumberMetamodel.model("10/2").withNumber(0)
-        val hundred1 = NumberMetamodel.model("100/1").withNumber(0)
-        val hundred2 = NumberMetamodel.model("100/2").withNumber(0)
-        val thousand1 = NumberMetamodel.model("1000/1").withNumber(0)
-        val thousand2 = NumberMetamodel.model("1000/2").withNumber(0)
+        val center = PrimitivesMetamodel.model("Z").withNumber(0)
+        val ten1 = PrimitivesMetamodel.model("10/1").withNumber(0)
+        val ten2 = PrimitivesMetamodel.model("10/2").withNumber(0)
+        val hundred1 = PrimitivesMetamodel.model("100/1").withNumber(0)
+        val hundred2 = PrimitivesMetamodel.model("100/2").withNumber(0)
+        val thousand1 = PrimitivesMetamodel.model("1000/1").withNumber(0)
+        val thousand2 = PrimitivesMetamodel.model("1000/2").withNumber(0)
         return SimulatorScenario(
             "Counting",
             models = listOf(

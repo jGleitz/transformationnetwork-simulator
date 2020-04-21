@@ -4,8 +4,8 @@ import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTra
 import de.joshuagleitze.transformationnetwork.changerecording.createChecked
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ofType
-import de.joshuagleitze.transformationnetwork.models.number.Number
-import de.joshuagleitze.transformationnetwork.models.number.NumberMetamodel
+import de.joshuagleitze.transformationnetwork.models.primitives.Number
+import de.joshuagleitze.transformationnetwork.models.primitives.PrimitivesMetamodel
 
 class Incrementing private constructor(
     override val leftModel: ChangeRecordingModel,
@@ -45,8 +45,8 @@ class Incrementing private constructor(
     private val maximum get() = type.maximum
 
     class Type(val minimum: Int, val maximum: Int) : ObservableModelTransformationType {
-        override val leftMetamodel get() = NumberMetamodel
-        override val rightMetamodel get() = NumberMetamodel
+        override val leftMetamodel get() = PrimitivesMetamodel
+        override val rightMetamodel get() = PrimitivesMetamodel
 
         override fun create(leftModel: Model, rightModel: Model) = createChecked(leftModel, rightModel) { left, right ->
             Incrementing(left, right, this)
