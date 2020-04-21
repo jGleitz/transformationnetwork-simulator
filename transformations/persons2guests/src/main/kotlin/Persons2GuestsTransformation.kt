@@ -3,8 +3,10 @@ package de.joshuagleitze.transformationnetwork.transformations
 import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeChange
 import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformation
-import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformationType
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
+import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformationType
+import de.joshuagleitze.transformationnetwork.changerecording.createChecked
+import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ofType
 import de.joshuagleitze.transformationnetwork.models.guestlist.Guest
 import de.joshuagleitze.transformationnetwork.models.guestlist.Guest.Metaclass.Attributes.age
@@ -30,10 +32,10 @@ class Persons2GuestsTransformation(val personsModel: ChangeRecordingModel, val g
         return personsModel.objects.ofType(Person.Metaclass).all { person ->
             val guest = correspondences.getRightCorrespondence(person, PERSON_GUEST)
             guest != null
-                    && guest.name == nameFromFirstNameAndLastName(person)
-                    && guest.age == ageFromBirthDate(person)
+                && guest.name == nameFromFirstNameAndLastName(person)
+                && guest.age == ageFromBirthDate(person)
         }
-                && guestlistModel.objects.ofType(Guest.Metaclass).all { guest ->
+            && guestlistModel.objects.ofType(Guest.Metaclass).all { guest ->
             correspondences.getLeftCorrespondence(guest, PERSON_GUEST) != null
         }
     }
@@ -120,9 +122,11 @@ class Persons2GuestsTransformation(val personsModel: ChangeRecordingModel, val g
 
     private fun String?.nullIfEmpty() = if (this == "") null else this
 
-    companion object Type : BaseModelTransformationType(PersonsMetamodel, GuestlistMetamodel) {
-        override fun createChecked(leftModel: ChangeRecordingModel, rightModel: ChangeRecordingModel) =
-            Persons2GuestsTransformation(leftModel, rightModel)
+    companion object Type : ObservableModelTransformationType {
+        override val leftMetamodel get() = PersonsMetamodel
+        override val rightMetamodel get() = GuestlistMetamodel
+        override fun create(leftModel: Model, rightModel: Model) =
+            createChecked(leftModel, rightModel, ::Persons2GuestsTransformation)
 
         private val PERSON_GUEST = CorrespondenceTag(Person.Metaclass, Guest.Metaclass)
     }

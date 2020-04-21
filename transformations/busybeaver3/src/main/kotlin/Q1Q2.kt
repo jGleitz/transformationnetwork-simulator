@@ -1,8 +1,11 @@
 package de.joshuagleitze.transformationnetwork.transformations.busybeaver3
 
-import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformationType
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
+import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformationType
+import de.joshuagleitze.transformationnetwork.changerecording.createChecked
+import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.models.turingmachine.TuringMachineMetamodel
+import implies
 
 class Q1Q2(val q1Model: ChangeRecordingModel, val q2Model: ChangeRecordingModel) :
     TuringStateTransformation() {
@@ -42,9 +45,10 @@ class Q1Q2(val q1Model: ChangeRecordingModel, val q2Model: ChangeRecordingModel)
         else -> q2
     }
 
-    companion object Type
-        : BaseModelTransformationType(TuringMachineMetamodel, TuringMachineMetamodel) {
-        override fun createChecked(leftModel: ChangeRecordingModel, rightModel: ChangeRecordingModel) =
-            Q1Q2(leftModel, rightModel)
+    companion object Type : ObservableModelTransformationType {
+        override val leftMetamodel get() = TuringMachineMetamodel
+        override val rightMetamodel get() = TuringMachineMetamodel
+
+        override fun create(leftModel: Model, rightModel: Model) = createChecked(leftModel, rightModel, ::Q1Q2)
     }
 }

@@ -4,9 +4,11 @@ import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.AnyAttributeChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeChange
 import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformation
-import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformationType
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
+import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformationType
+import de.joshuagleitze.transformationnetwork.changerecording.createChecked
 import de.joshuagleitze.transformationnetwork.metametamodel.AnyModelObject
+import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.ModelObjectIdentifier
 import de.joshuagleitze.transformationnetwork.metametamodel.byIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.ofType
@@ -32,23 +34,23 @@ class Uml2JavaTransformation(val umlModel: ChangeRecordingModel, val javaModel: 
         return umlModel.objects.ofType(UmlInterface.Metaclass).all { umlInterface ->
             val javaInterface = correspondences.getRightCorrespondence(umlInterface, INTERFACES)
             javaInterface != null
-                    && javaInterface.name == umlInterface.name
-                    && javaInterface.methods == umlInterface.methods?.mapNotNull(::getMatchingJavaMethod)
+                && javaInterface.name == umlInterface.name
+                && javaInterface.methods == umlInterface.methods?.mapNotNull(::getMatchingJavaMethod)
         } && umlModel.objects.ofType(UmlClass.Metaclass).all { umlClass ->
             val javaClass = correspondences.getRightCorrespondence(umlClass, CLASSES)
             javaClass != null
-                    && javaClass.name == umlClass.name
-                    && javaClass.methods == umlClass.methods?.mapNotNull(::getMatchingJavaMethod)
-                    && javaClass.implements == umlClass.implements?.let(umlModel::getObject)
+                && javaClass.name == umlClass.name
+                && javaClass.methods == umlClass.methods?.mapNotNull(::getMatchingJavaMethod)
+                && javaClass.implements == umlClass.implements?.let(umlModel::getObject)
                 ?.let { correspondences.getRightCorrespondence(it, INTERFACES) }
                 ?.let(::byIdentity)
         } && umlModel.objects.ofType(UmlMethod.Metaclass).all { umlMethod ->
             val javaMethod = correspondences.getRightCorrespondence(umlMethod, METHODS)
             javaMethod != null
-                    && javaMethod.name == umlMethod.name
-                    && javaMethod.parameters == umlMethod.parameters
-                    && javaMethod.visibility == "public"
-                    && javaMethod.modifiers?.contains("override") != true
+                && javaMethod.name == umlMethod.name
+                && javaMethod.parameters == umlMethod.parameters
+                && javaMethod.visibility == "public"
+                && javaMethod.modifiers?.contains("override") != true
         } && javaModel.objects.ofType(JavaInterface.Metaclass).all { javaInterface ->
             correspondences.getLeftCorrespondence(javaInterface, INTERFACES) != null
         } && javaModel.objects.ofType(JavaClass.Metaclass).all { javaClass ->
@@ -242,9 +244,12 @@ class Uml2JavaTransformation(val umlModel: ChangeRecordingModel, val javaModel: 
         }
     }
 
-    companion object Type : BaseModelTransformationType(UmlMetamodel, JavaMetamodel) {
-        override fun createChecked(leftModel: ChangeRecordingModel, rightModel: ChangeRecordingModel) =
-            Uml2JavaTransformation(leftModel, rightModel)
+    companion object Type : ObservableModelTransformationType {
+        override val leftMetamodel get() = UmlMetamodel
+        override val rightMetamodel get() = JavaMetamodel
+
+        override fun create(leftModel: Model, rightModel: Model) =
+            createChecked(leftModel, rightModel, ::Uml2JavaTransformation)
 
         private val INTERFACES = CorrespondenceTag(UmlInterface.Metaclass, JavaInterface.Metaclass)
         private val CLASSES = CorrespondenceTag(UmlClass.Metaclass, JavaClass.Metaclass)
