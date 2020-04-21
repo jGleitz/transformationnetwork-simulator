@@ -19,7 +19,7 @@ class StepByStep : PropagationStrategy {
         val executed = HashSet<ObservableModelTransformation>()
         val allChanges = DefaultAdditiveChangeSet(changes)
         val candidatesInOrder = generateSequence {
-            candidates.find { allChanges.affect(it) }
+            candidates.find { allChanges.affect(it) && !it.isConsistent() }
         }
         for (candidate in candidatesInOrder) {
             lateinit var candidateChanges: ChangeSet

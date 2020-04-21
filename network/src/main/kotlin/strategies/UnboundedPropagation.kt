@@ -16,7 +16,7 @@ class UnboundedPropagation : PropagationStrategy {
         while (transformationsToUpdate.isNotEmpty()) {
             val transformation = transformationsToUpdate.first()
             val unseenChanges = changeHistory.changesSince(transformationKnowledge.getValue(transformation))
-            if (!unseenChanges.affect(transformation)) {
+            if (!unseenChanges.affect(transformation) || transformation.isConsistent()) {
                 transformationsToUpdate.remove(transformation)
             } else {
                 yield() {

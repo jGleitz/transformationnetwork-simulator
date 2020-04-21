@@ -4,9 +4,10 @@ import de.joshuagleitze.transformationnetwork.changemetamodel.AdditionChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.AttributeChange
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformation
-import de.joshuagleitze.transformationnetwork.changerecording.BaseModelTransformationType
 import de.joshuagleitze.transformationnetwork.changerecording.ChangeRecordingModel
 import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformationType
+import de.joshuagleitze.transformationnetwork.changerecording.createChecked
+import de.joshuagleitze.transformationnetwork.metametamodel.Model
 import de.joshuagleitze.transformationnetwork.metametamodel.byIdentity
 import de.joshuagleitze.transformationnetwork.metametamodel.ofType
 import de.joshuagleitze.transformationnetwork.models.java.Class
@@ -31,13 +32,13 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
                 val endpoint = correspondences.getRightCorrespondence(method, METHOD_ENDPOINT)
                 val classMethod = correspondences.getLeftSecondCorrespondence(method, METHOD_IMPLEMENTATION)
                 endpoint != null
-                        && endpoint.path == getEndpointPath(method)
-                        && endpoint.method == getEndpointMethod(method)
-                        && classMethod != null
-                        && classMethod.name == method.name
-                        && classMethod.parameters == method.parameters
-                        && classMethod.visibility == method.visibility
-                        && (classMethod.modifiers?.contains("override") ?: false)
+                    && endpoint.path == getEndpointPath(method)
+                    && endpoint.method == getEndpointMethod(method)
+                    && classMethod != null
+                    && classMethod.name == method.name
+                    && classMethod.parameters == method.parameters
+                    && classMethod.visibility == method.visibility
+                    && (classMethod.modifiers?.contains("override") ?: false)
             } ?: true)
         }
     }
@@ -170,11 +171,12 @@ class Java2OpenApiTransformation(val javaModel: ChangeRecordingModel, val openAp
     private fun String.toFirstLower(): String =
         if (this.isEmpty()) "" else this[0].toLowerCase() + this.substring(1)
 
-    companion object Type : BaseModelTransformationType(JavaMetamodel, OpenApiMetamodel) {
-        override fun createChecked(
-            leftModel: ChangeRecordingModel,
-            rightModel: ChangeRecordingModel
-        ) = Java2OpenApiTransformation(leftModel, rightModel)
+    companion object Type : ObservableModelTransformationType {
+        override val leftMetamodel get() = JavaMetamodel
+        override val rightMetamodel get() = OpenApiMetamodel
+
+        override fun create(leftModel: Model, rightModel: Model) =
+            createChecked(leftModel, rightModel, ::Java2OpenApiTransformation)
 
         private val IMPLEMENTATION = CorrespondenceTag(Interface.Metaclass, Class.Metaclass)
         private val METHOD_IMPLEMENTATION = CorrespondenceTag(Method.Metaclass, Method.Metaclass)

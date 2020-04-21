@@ -132,10 +132,12 @@ private class ModelViewComponent : RComponent<ModelViewComponentProps, ModelView
                     css { +ModelStyles.modelName }
                     +props.model.name
                 }
-                styledSpan {
-                    css { +ModelStyles.metamodelName }
-                    +": "
-                    +props.model.metamodel.name
+                if (props.model.metamodel.name.isNotBlank()) {
+                    styledSpan {
+                        css { +ModelStyles.metamodelName }
+                        +": "
+                        +props.model.metamodel.name
+                    }
                 }
                 styledDiv {
                     css { +ModelStyles.objectContainer }

@@ -20,10 +20,12 @@ include(
     ":models:uml",
     ":models:java",
     ":models:turingmachine",
+    ":models:primitives",
     ":transformations:persons2guests",
     ":transformations:uml2java",
     ":transformations:java2openapi",
     ":transformations:busybeaver3",
+    ":transformations:incrementing",
     ":simulator"
 )
 

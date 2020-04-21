@@ -4,7 +4,7 @@ import de.joshuagleitze.transformationnetwork.metametamodel.AbstractMetamodel
 import de.joshuagleitze.transformationnetwork.metametamodel.Model
 
 object TuringMachineMetamodel : AbstractMetamodel() {
-    override val name: String get() = "Turing Machine"
+    override val name: String get() = ""
 
     override val classes get() = setOf(TuringState.Metaclass)
 }
