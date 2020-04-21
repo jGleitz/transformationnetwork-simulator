@@ -161,7 +161,7 @@ private class TransformationSimulator(props: TransformationSimulatorProps) :
                             strategy = currentStrategy
                             changes = currentScenario.changes
                             network = currentScenario.network
-                            setTime = this@TransformationSimulator::setTime
+                            timeStep = { this@TransformationSimulator.setTime(state.time + 1) }
                             resetSimulation = { this@TransformationSimulator.resetSimulation() }
                         }
                     }
