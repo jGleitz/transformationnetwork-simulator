@@ -2,6 +2,7 @@ package de.joshuagleitze.transformationnetwork.network.strategies
 
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.ChangeSet
 import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.DefaultAdditiveChangeSet
+import de.joshuagleitze.transformationnetwork.changemetamodel.changeset.plus
 import de.joshuagleitze.transformationnetwork.changerecording.ObservableModelTransformation
 import de.joshuagleitze.transformationnetwork.network.PropagationScope
 import de.joshuagleitze.transformationnetwork.network.PropagationStrategy
@@ -14,22 +15,26 @@ class StepByStep : PropagationStrategy {
         propagate(changeSet, network)
     }
 
-    private suspend fun PropagationScope.propagate(changes: ChangeSet, network: TransformationNetwork) {
+    private suspend fun PropagationScope.propagate(changes: ChangeSet, network: TransformationNetwork): ChangeSet {
         val candidates = HashSet(network.transformations)
         val executed = HashSet<ObservableModelTransformation>()
-        val allChanges = DefaultAdditiveChangeSet(changes)
+        val accumulatedChanges = DefaultAdditiveChangeSet(changes)
         val candidatesInOrder = generateSequence {
-            candidates.find { allChanges.affect(it) && !it.isConsistent() }
+            candidates.find { accumulatedChanges.affect(it) && !it.isConsistent() }
         }
         for (candidate in candidatesInOrder) {
             lateinit var candidateChanges: ChangeSet
             yield() {
-                candidateChanges = executeTransformation(candidate, allChanges)
+                candidateChanges = executeTransformation(candidate, accumulatedChanges)
             }
-            propagate(candidateChanges, network.subnetworkInducedBy(executed))
-            allChanges += candidateChanges
+            val propagationChanges = propagate(candidateChanges, network.subnetworkInducedBy(executed))
+            if (!candidate.isConsistent()) yield() {
+                candidateChanges = executeTransformation(candidate, propagationChanges)
+            }
+            accumulatedChanges += propagationChanges + candidateChanges
             candidates -= candidate
             executed += candidate
         }
+        return accumulatedChanges
     }
 }
