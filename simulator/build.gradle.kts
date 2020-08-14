@@ -8,7 +8,7 @@ dependencies {
     implementation(name = "kotlin-styled", version = kotlinCssVersion, group = "org.jetbrains")
     implementation(name = "kotlin-css-js", version = kotlinCssVersion, group = "org.jetbrains")
     implementation(name = "kotlin-extensions", version = "1.0.1-pre.110-kotlin-1.3.72", group = "org.jetbrains")
-    implementation(name = "kotlinx-html-js", version = "0.7.1", group = "org.jetbrains.kotlinx")
+    implementation(name = "kotlinx-html-js", version = "0.7.2", group = "org.jetbrains.kotlinx")
 
     implementation(project(":publishsubscribe"))
     implementation(project(":network"))
