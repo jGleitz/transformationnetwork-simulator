@@ -9,6 +9,7 @@ import de.joshuagleitze.transformationnetwork.simulator.data.strategy.DescribedP
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import de.joshuagleitze.transformationnetwork.simulator.util.checkAvailable
 import encodeURIComponent
+import kotlinx.browser.window
 import kotlinx.css.Align
 import kotlinx.css.BoxSizing
 import kotlinx.css.Display.flex
@@ -48,7 +49,6 @@ import react.setState
 import styled.StyleSheet
 import styled.css
 import styled.styledDiv
-import kotlin.browser.window
 
 private object TransformationSimulatorStyles : StyleSheet("TransformationSimulator") {
     val simulator by css {

@@ -30,11 +30,7 @@ allprojects {
     kotlin {
         js {
             browser()
-            compilations.all {
-                compileKotlinTask.kotlinOptions {
-                    moduleKind = "commonjs"
-                }
-            }
+            useCommonJs()
         }
     }
 

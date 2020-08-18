@@ -15,7 +15,7 @@ class ConstantPerTransformation(val maxPerTransformation: Int) : PropagationStra
             candidates
                 .filter { (candidate, count) ->
                     allChanges.affect(candidate) && count < maxPerTransformation && !candidate.isConsistent()
-                }.minBy { (_, count) ->
+                }.minByOrNull { (_, count) ->
                     count
                 }
         }

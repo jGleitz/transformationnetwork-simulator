@@ -8,6 +8,7 @@ import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpa
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.horizontalControlPadding
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.verticalControlPadding
 import kotlinext.js.jsObject
+import kotlinx.browser.document
 import kotlinx.css.Display.grid
 import kotlinx.css.Display.inlineBlock
 import kotlinx.css.GridColumnStart
@@ -46,7 +47,6 @@ import styled.StyleSheet
 import styled.css
 import styled.styledDiv
 import styled.styledSpan
-import kotlin.browser.document
 
 private object SimulationControlStyles : StyleSheet("SimulationControl") {
     val container by css {

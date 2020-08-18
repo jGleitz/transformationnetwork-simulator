@@ -13,11 +13,11 @@ import de.joshuagleitze.transformationnetwork.simulator.scenarios.PersonsAndGues
 import de.joshuagleitze.transformationnetwork.simulator.styles.globalStyleSheet
 import kotlinext.js.invoke
 import kotlinext.js.js
+import kotlinx.browser.document
+import kotlinx.browser.window
 import react.createElement
 import react.dom.render
 import styled.createGlobalStyle
-import kotlin.browser.document
-import kotlin.browser.window
 
 private val scenarios = listOf(
     PersonsAndGuests.create(),

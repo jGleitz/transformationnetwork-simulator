@@ -7,6 +7,8 @@ import de.joshuagleitze.transformationnetwork.simulator.data.arrow.DefaultArrowT
 import de.joshuagleitze.transformationnetwork.simulator.util.DataChangeEvent
 import de.joshuagleitze.transformationnetwork.simulator.util.externals.ResizeObserver
 import de.joshuagleitze.transformationnetwork.simulator.util.geometry.Coordinate
+import kotlinx.browser.document
+import kotlinx.browser.window
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.events.Event
 import react.RBuilder
@@ -15,8 +17,6 @@ import react.RHandler
 import react.RProps
 import react.RReadableRef
 import react.RState
-import kotlin.browser.document
-import kotlin.browser.window
 
 interface ArrowTargetProps : RProps {
     var targetRef: RReadableRef<HTMLElement>
