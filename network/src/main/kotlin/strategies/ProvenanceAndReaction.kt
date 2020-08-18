@@ -10,7 +10,7 @@ import de.joshuagleitze.transformationnetwork.network.TransformationNetwork
 import de.joshuagleitze.transformationnetwork.network.buildPropagation
 import de.joshuagleitze.transformationnetwork.network.executeTransformation
 
-class StepByStep : PropagationStrategy {
+class ProvenanceAndReaction : PropagationStrategy {
     override fun preparePropagation(changeSet: ChangeSet, network: TransformationNetwork) = buildPropagation {
         propagate(changeSet, network)
     }
