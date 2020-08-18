@@ -17,13 +17,13 @@ import de.joshuagleitze.transformationnetwork.transformations.Uml2JavaTransforma
 
 object ObjectOriented {
     fun create(): SimulatorScenario {
-        val uml = UmlMetamodel.model("Architektur")
+        val uml = UmlMetamodel.model("Architecture")
         val beispielMethod = Method().apply {
-            name = "getBeispiele"
+            name = "getExamples"
             parameters = listOf()
         }
-        val java = JavaMetamodel.model("Implementierung")
-        val openApi = OpenApiMetamodel.model("REST API")
+        val java = JavaMetamodel.model("Implementation")
+        val openApi = OpenApiMetamodel.model("HTTP API")
         return SimulatorScenario(
             "UML, Java & OpenApi",
             models = listOf(uml at (1 x 1), java at (2 x 1), openApi at (3 x 1)),
@@ -35,7 +35,7 @@ object ObjectOriented {
                 changeSetOf(
                     uml.changesForAdding(beispielMethod),
                     uml.changesForAdding(Interface().apply {
-                        name = "BeispielService"
+                        name = "ExampleService"
                         methods = listOf(byIdentity(beispielMethod))
                     })
                 )

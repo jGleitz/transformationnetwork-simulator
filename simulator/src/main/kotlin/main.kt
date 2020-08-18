@@ -1,7 +1,7 @@
 package de.joshuagleitze.transformationnetwork.simulator
 
 import de.joshuagleitze.transformationnetwork.network.strategies.ConstantPerTransformation
-import de.joshuagleitze.transformationnetwork.network.strategies.StepByStep
+import de.joshuagleitze.transformationnetwork.network.strategies.ProvenanceAndReaction
 import de.joshuagleitze.transformationnetwork.network.strategies.UnboundedPropagation
 import de.joshuagleitze.transformationnetwork.simulator.components.simulator.TransformationSimulator
 import de.joshuagleitze.transformationnetwork.simulator.data.strategy.describe
@@ -30,7 +30,7 @@ private val scenarios = listOf(
 
 private val strategies = listOf(
     UnboundedPropagation().describe(name = "Unbounded Propagation"),
-    StepByStep().describe(name = "Step by Step"),
+    ProvenanceAndReaction().describe(name = "Provenance and Reaction"),
     ConstantPerTransformation(1).describe(name = "1x per Transformation"),
     ConstantPerTransformation(3).describe(name = "3x per Transformation"),
     ConstantPerTransformation(4).describe(name = "4x per Transformation")
