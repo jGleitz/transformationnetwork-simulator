@@ -1,13 +1,13 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 dependencies {
-    val kotlinReactVersion = "16.13.1-pre.110-kotlin-1.3.72"
+    val kotlinReactVersion = "16.13.1-pre.111-kotlin-1.4.0"
     implementation(name = "kotlin-react", version = kotlinReactVersion, group = "org.jetbrains")
     implementation(name = "kotlin-react-dom", version = kotlinReactVersion, group = "org.jetbrains")
-    val kotlinCssVersion = "1.0.0-pre.110-kotlin-1.3.72"
+    val kotlinCssVersion = "1.0.0-pre.111-kotlin-1.4.0"
     implementation(name = "kotlin-styled", version = kotlinCssVersion, group = "org.jetbrains")
     implementation(name = "kotlin-css-js", version = kotlinCssVersion, group = "org.jetbrains")
-    implementation(name = "kotlin-extensions", version = "1.0.1-pre.110-kotlin-1.3.72", group = "org.jetbrains")
+    implementation(name = "kotlin-extensions", version = "1.0.1-pre.111-kotlin-1.4.0", group = "org.jetbrains")
     implementation(name = "kotlinx-html-js", version = "0.7.1", group = "org.jetbrains.kotlinx")
 
     implementation(project(":publishsubscribe"))

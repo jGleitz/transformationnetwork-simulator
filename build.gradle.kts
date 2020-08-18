@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version "1.3.72"
+    kotlin("js") version "1.4.0"
     idea
 }
 
@@ -16,7 +16,7 @@ allprojects {
 
 val spekVersion: String by project
 
-subprojects {
+allprojects {
     apply {
         // must use `apply` in `subprojects`, `plugins` does not work
         plugin("idea")
@@ -24,18 +24,15 @@ subprojects {
     }
 
     dependencies {
-        implementation(kotlin("stdlib-js"))
-
         testImplementation(kotlin("test-js"))
     }
 
     kotlin {
-        target {
+        js {
             browser()
             compilations.all {
                 compileKotlinTask.kotlinOptions {
                     moduleKind = "commonjs"
-                    freeCompilerArgs += "-XXLanguage:+NewInference"
                 }
             }
         }
