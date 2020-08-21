@@ -7,7 +7,7 @@ dependencies {
     val kotlinCssVersion = "1.0.0-pre.111-kotlin-1.4.0"
     implementation(name = "kotlin-styled", version = kotlinCssVersion, group = "org.jetbrains")
     implementation(name = "kotlin-css-js", version = kotlinCssVersion, group = "org.jetbrains")
-    implementation(name = "kotlin-extensions", version = "1.0.1-pre.111-kotlin-1.4.0", group = "org.jetbrains")
+    implementation(name = "kotlin-extensions", version = "1.0.1-pre.112-kotlin-1.4.0", group = "org.jetbrains")
     implementation(name = "kotlinx-html-js", version = "0.7.2", group = "org.jetbrains.kotlinx")
 
     implementation(project(":publishsubscribe"))
