@@ -4,7 +4,7 @@ dependencies {
     val kotlinReactVersion = "16.13.1-pre.112-kotlin-1.4.0"
     implementation(name = "kotlin-react", version = kotlinReactVersion, group = "org.jetbrains")
     implementation(name = "kotlin-react-dom", version = kotlinReactVersion, group = "org.jetbrains")
-    val kotlinCssVersion = "1.0.0-pre.112-kotlin-1.4.0"
+    val kotlinCssVersion = "1.0.0-pre.114-kotlin-1.4.0"
     implementation(name = "kotlin-styled", version = kotlinCssVersion, group = "org.jetbrains")
     implementation(name = "kotlin-css-js", version = kotlinCssVersion, group = "org.jetbrains")
     implementation(name = "kotlin-extensions", version = "1.0.1-pre.112-kotlin-1.4.0", group = "org.jetbrains")
