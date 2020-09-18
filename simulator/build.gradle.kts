@@ -4,9 +4,8 @@ dependencies {
     val kotlinReactVersion = "16.13.1-pre.116-kotlin-1.4.10"
     implementation(name = "kotlin-react", version = kotlinReactVersion, group = "org.jetbrains")
     implementation(name = "kotlin-react-dom", version = kotlinReactVersion, group = "org.jetbrains")
-    val kotlinCssVersion = "1.0.0-pre.114-kotlin-1.4.0"
-    implementation(name = "kotlin-styled", version = kotlinCssVersion, group = "org.jetbrains")
-    implementation(name = "kotlin-css-js", version = kotlinCssVersion, group = "org.jetbrains")
+    implementation(name = "kotlin-styled", version = "5.2.0-pre.116-kotlin-1.4.10", group = "org.jetbrains")
+    implementation(name = "kotlin-css-js", version = "1.0.0-pre.116-kotlin-1.4.10", group = "org.jetbrains")
     implementation(name = "kotlin-extensions", version = "1.0.1-pre.116-kotlin-1.4.10", group = "org.jetbrains")
     implementation(name = "kotlinx-html-js", version = "0.7.2", group = "org.jetbrains.kotlinx")
 
@@ -30,7 +29,7 @@ dependencies {
     implementation(npm("react-dom", reactVersion))
     implementation(npm("react-is", reactVersion))
     implementation(npm("core-js", "3.6.5"))
-    implementation(npm("styled-components", "5.1.0"))
+    implementation(npm("styled-components", "5.2.0"))
     implementation(npm("inline-style-prefixer", "6.0.0"))
     implementation(npm("react-select", "3.1.0"))
     implementation(npm("use-force-update", "1.0.7"))
