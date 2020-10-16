@@ -9,12 +9,8 @@ allprojects {
 
     repositories {
         jcenter()
-        maven("https://kotlin.bintray.com/kotlin-js-wrappers")
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 }
-
-val spekVersion: String by project
 
 allprojects {
     apply {
