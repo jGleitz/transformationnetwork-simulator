@@ -24,7 +24,7 @@ dependencies {
     implementation(project(":transformations:busybeaver3"))
     implementation(project(":transformations:incrementing"))
 
-    val reactVersion = "16.13.1"
+    val reactVersion = "17.0.0"
     implementation(npm("react", reactVersion))
     implementation(npm("react-dom", reactVersion))
     implementation(npm("react-is", reactVersion))
