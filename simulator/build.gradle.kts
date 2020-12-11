@@ -4,7 +4,7 @@ dependencies {
     val kotlinReactVersion = "17.0.0-pre.131-kotlin-1.4.21"
     implementation(name = "kotlin-react", version = kotlinReactVersion, group = "org.jetbrains")
     implementation(name = "kotlin-react-dom", version = kotlinReactVersion, group = "org.jetbrains")
-    implementation(name = "kotlin-styled", version = "5.2.0-pre.130-kotlin-1.4.21", group = "org.jetbrains")
+    implementation(name = "kotlin-styled", version = "5.2.0-pre.131-kotlin-1.4.10", group = "org.jetbrains")
     implementation(name = "kotlin-css-js", version = "1.0.0-pre.131-kotlin-1.4.21", group = "org.jetbrains")
     implementation(name = "kotlin-extensions", version = "1.0.1-pre.131-kotlin-1.4.21", group = "org.jetbrains")
     implementation(name = "kotlinx-html-js", version = "0.7.2", group = "org.jetbrains.kotlinx")
