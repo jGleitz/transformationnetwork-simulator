@@ -6,11 +6,10 @@ import de.joshuagleitze.transformationnetwork.simulator.data.scenario.Positioned
 import de.joshuagleitze.transformationnetwork.simulator.styles.Dimension.baseSpacing
 import kotlinx.css.Align.center
 import kotlinx.css.BoxSizing.borderBox
-import kotlinx.css.ColumnGap
 import kotlinx.css.Display.grid
+import kotlinx.css.Gap
 import kotlinx.css.JustifyContent.spaceEvenly
 import kotlinx.css.Position.absolute
-import kotlinx.css.RowGap
 import kotlinx.css.alignItems
 import kotlinx.css.boxSizing
 import kotlinx.css.columnGap
@@ -46,8 +45,8 @@ private object ModelCanvasStyles : StyleSheet("ModelCanvas") {
         width = 100.pct
         height = 100.pct
         display = grid
-        rowGap = RowGap((baseSpacing * 2).value)
-        columnGap = ColumnGap((baseSpacing * 2).value)
+        rowGap = Gap((baseSpacing * 2).value)
+        columnGap = Gap((baseSpacing * 2).value)
         alignItems = center
         put("justify-items", "center")
         justifyContent = spaceEvenly
