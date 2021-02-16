@@ -5,7 +5,7 @@ dependencies {
     implementation(name = "kotlin-react", version = kotlinReactVersion, group = "org.jetbrains")
     implementation(name = "kotlin-react-dom", version = kotlinReactVersion, group = "org.jetbrains")
     implementation(name = "kotlin-styled", version = "5.2.1-pre.145-kotlin-1.4.30", group = "org.jetbrains")
-    implementation(name = "kotlin-css-js", version = "1.0.0-pre.145-kotlin-1.4.30", group = "org.jetbrains")
+    implementation(name = "kotlin-css-js", version = "1.0.0-pre.146-kotlin-1.4.30", group = "org.jetbrains")
     implementation(name = "kotlin-extensions", version = "1.0.1-pre.145-kotlin-1.4.30", group = "org.jetbrains")
     implementation(name = "kotlinx-html-js", version = "0.7.2", group = "org.jetbrains.kotlinx")
 
