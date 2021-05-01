@@ -16,10 +16,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          key: gradle-v2-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
           restore-keys: |
-            gradle-${{ runner.os }}
-            gradle-
+            gradle-v2-${{ runner.os }}
+            gradle-v2-
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
